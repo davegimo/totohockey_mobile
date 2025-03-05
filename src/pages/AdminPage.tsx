@@ -19,7 +19,6 @@ import '../styles/AdminPage.css';
 const AdminPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [isAdminUser, setIsAdminUser] = useState(false);
   const [squadre, setSquadre] = useState<any[]>([]);
   const [partite, setPartite] = useState<any[]>([]);
   const [turni, setTurni] = useState<Turno[]>([]);
@@ -49,8 +48,6 @@ const AdminPage = () => {
   });
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [activeTab, setActiveTab] = useState<'turni' | 'partite'>('turni');
-  const [isCreatingPartita, setIsCreatingPartita] = useState(false);
-  const [showCreatePartitaForm, setShowCreatePartitaForm] = useState(false);
 
   useEffect(() => {
     checkAdmin();
@@ -75,7 +72,6 @@ const AdminPage = () => {
         navigate('/');
         return;
       }
-      setIsAdminUser(true);
       setLoading(false);
     } catch (error) {
       console.error('Errore durante il controllo dei permessi:', error);
@@ -152,11 +148,10 @@ const AdminPage = () => {
       return;
     }
 
-    setIsCreatingPartita(true);
     setError('');
 
     try {
-      const { partita, error } = await createPartita(
+      const { error } = await createPartita(
         selectedTurno,
         parseInt(formData.squadra_casa_id),
         parseInt(formData.squadra_ospite_id),
@@ -181,12 +176,9 @@ const AdminPage = () => {
         campionato: 'Elite Maschile'
       });
       
-      setIsCreatingPartita(false);
-      setShowCreatePartitaForm(false);
     } catch (error) {
       console.error('Errore durante la creazione della partita:', error);
       setError('Si è verificato un errore durante la creazione della partita');
-      setIsCreatingPartita(false);
     }
   };
 
@@ -201,7 +193,7 @@ const AdminPage = () => {
     }
     
     try {
-      const { data, error } = await createTurno(turnoFormData);
+      const { error } = await createTurno(turnoFormData);
       
       if (error) {
         console.error('Errore durante la creazione del turno:', error);
@@ -209,7 +201,7 @@ const AdminPage = () => {
         return;
       }
       
-      console.log('Turno creato con successo:', data);
+      console.log('Turno creato con successo');
       setSuccess('Turno creato con successo');
       
       // Reset form
@@ -284,8 +276,8 @@ const AdminPage = () => {
     
     console.log('Eliminazione turno con ID:', turnoToDelete);
     try {
-      const { success, error } = await deleteTurno(turnoToDelete);
-      if (!success || error) {
+      const { error } = await deleteTurno(turnoToDelete);
+      if (error) {
         console.error('Errore durante l\'eliminazione del turno:', error);
         setError('Errore durante l\'eliminazione del turno: ' + (error instanceof Error ? error.message : 'Errore sconosciuto'));
       } else {
@@ -314,7 +306,7 @@ const AdminPage = () => {
     
     console.log('Aggiornamento risultato partita con ID:', partitaToEdit, risultatoForm);
     try {
-      const { success, error } = await updateRisultatoPartita(
+      const { error } = await updateRisultatoPartita(
         partitaToEdit, 
         risultatoForm.risultato_casa, 
         risultatoForm.risultato_ospite
@@ -378,7 +370,7 @@ const AdminPage = () => {
     
     try {
       console.log('Avvio ricalcolo punteggi...');
-      const { success, error } = await ricalcolaPunteggiUtenti();
+      const { error } = await ricalcolaPunteggiUtenti();
       
       if (error) {
         console.error('Errore durante il ricalcolo dei punteggi:', error);

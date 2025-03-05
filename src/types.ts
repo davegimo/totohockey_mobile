@@ -1,4 +1,4 @@
-import { Partita, Pronostico, Turno } from './services/supabase';
+import { Partita, Pronostico } from './services/supabase';
 
 export type PartitaWithPronostico = Partita & {
   pronostico?: Pronostico | null;

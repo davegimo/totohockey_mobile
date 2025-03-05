@@ -364,7 +364,7 @@ export const getPronosticiWithDetails = async (userId: string) => {
     });
     
     // Convertiamo l'oggetto in un array ordinato per data_limite del turno (decrescente)
-    const turniConPronostici = Object.entries(pronosticiPerTurno).map(([turnoId, pronostici]) => {
+    const turniConPronostici = Object.entries(pronosticiPerTurno).map(([, pronostici]) => {
       const turno = pronostici[0].partita.turno;
       return {
         turno,

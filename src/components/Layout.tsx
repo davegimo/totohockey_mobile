@@ -18,8 +18,8 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (isLoggedIn) {
-        const adminStatus = await isAdmin();
-        setIsAdminUser(adminStatus);
+        const { isAdminUser: admin } = await isAdmin();
+        setIsAdminUser(admin);
       } else {
         setIsAdminUser(false);
       }
