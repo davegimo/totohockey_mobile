@@ -1,0 +1,295 @@
+.dashboard-page {
+  padding: var(--spacing-md) 0;
+}
+
+.dashboard-page h1 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-md);
+  color: #2e7d32; /* Verde */
+  text-align: center;
+}
+
+.turno-countdown {
+  background-color: var(--primary-color-light);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--primary-color);
+}
+
+.countdown-message {
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.countdown-timer {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius);
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: var(--font-size-lg);
+  color: var(--text-color-light);
+}
+
+.no-partite {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.partite-list-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.partita-card-dashboard {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: transform 0.2s;
+  border-left: 5px solid transparent;
+}
+
+.partita-card-elite-maschile {
+  border-left: 5px solid var(--primary-color); /* Verde per Elite Maschile */
+}
+
+.partita-card-elite-femminile {
+  border-left: 5px solid #9c27b0; /* Viola per Elite Femminile */
+}
+
+.partita-card-dashboard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.partita-header-dashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.partita-data-dashboard {
+  font-size: var(--font-size-sm);
+  color: var(--primary-color);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.partita-campionato {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  margin-left: var(--spacing-sm);
+}
+
+.campionato-maschile {
+  color: var(--primary-color);
+  background-color: rgba(30, 132, 73, 0.1);
+}
+
+.campionato-femminile {
+  color: #9c27b0;
+  background-color: rgba(156, 39, 176, 0.1);
+}
+
+.partita-teams-dashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) 0;
+}
+
+.team-dashboard {
+  font-weight: 600;
+  font-size: var(--font-size-md);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.team-casa-dashboard {
+  text-align: center;
+}
+
+.team-ospite-dashboard {
+  text-align: center;
+}
+
+.team-logo-dashboard {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: white;
+  padding: 2px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.vs-dashboard {
+  margin: 0 var(--spacing-md);
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+}
+
+.risultato-container-dashboard {
+  background-color: #f5f5f5;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+  border-left: 3px solid var(--primary-color);
+}
+
+.risultato-container-dashboard h3 {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-xs);
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.risultato-finale-dashboard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.risultato-valore-dashboard {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: white;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  min-width: 40px;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.risultato-separator-dashboard {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.pronostico-container-dashboard {
+  background-color: #f9f9f9;
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.pronostico-container-dashboard h3 {
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-sm);
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.pronostico-inputs-dashboard {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.pronostico-input-dashboard {
+  width: 60px;
+  text-align: center;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  padding: var(--spacing-xs);
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.pronostico-input-dashboard:focus {
+  border-color: var(--primary-color);
+}
+
+.pronostico-separator-dashboard {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.salva-btn {
+  width: 100%;
+  background-color: var(--primary-color);
+  margin-top: var(--spacing-sm);
+}
+
+.punti-container-dashboard {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius);
+  background-color: #f0f0f0;
+}
+
+.punti-valore-dashboard {
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius);
+  display: inline-block;
+}
+
+.punti-3 {
+  background-color: #4caf50;
+  color: white;
+}
+
+.punti-1 {
+  background-color: #ff9800;
+  color: white;
+}
+
+.punti-0 {
+  background-color: #f44336;
+  color: white;
+}
+
+.pronostico-non-inserito {
+  padding: var(--spacing-md);
+  background-color: #f0f0f0;
+  border-radius: var(--border-radius);
+  margin: var(--spacing-sm) 0;
+}
+
+.pronostico-non-inserito p {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: #f44336; /* Rosso */
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .partite-list {
+    grid-template-columns: 1fr;
+  }
+}

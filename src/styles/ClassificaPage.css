@@ -1,0 +1,111 @@
+.classifica-page {
+  padding: var(--spacing-md) 0;
+}
+
+.classifica-page h1 {
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+}
+
+.no-classifica {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.classifica-container {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.classifica-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.classifica-table th,
+.classifica-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+}
+
+.classifica-table th {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.classifica-table tr:nth-child(even) {
+  background-color: var(--background-color);
+}
+
+.classifica-table tr:hover {
+  background-color: rgba(46, 204, 113, 0.1);
+}
+
+.posizione {
+  text-align: center;
+  font-weight: 600;
+  width: 80px;
+}
+
+.medal {
+  font-size: 1.5rem;
+}
+
+.giocatore {
+  font-weight: 500;
+}
+
+.giocatore-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.giocatore-link:hover {
+  background-color: rgba(46, 204, 113, 0.15);
+  text-decoration: underline;
+}
+
+.punteggio {
+  font-weight: 600;
+  text-align: center;
+  color: var(--primary-color);
+}
+
+.current-user {
+  background-color: rgba(46, 204, 113, 0.2) !important;
+  font-weight: 700;
+}
+
+.tu-label {
+  margin-left: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  background-color: var(--primary-color);
+  color: var(--text-light);
+  padding: 2px var(--spacing-xs);
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .classifica-table th,
+  .classifica-table td {
+    padding: var(--spacing-sm);
+  }
+  
+  .posizione {
+    width: 50px;
+  }
+} 
