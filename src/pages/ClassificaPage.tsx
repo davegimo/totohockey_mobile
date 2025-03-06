@@ -72,13 +72,14 @@ const ClassificaPage = () => {
                       className={isCurrentUser ? 'current-user' : ''}
                     >
                       <td className="posizione">
-                        {posizione <= 3 && (
+                        {posizione <= 3 ? (
                           <span className="medal">
                             {posizione === 1 ? '🥇' : 
                              posizione === 2 ? '🥈' : '🥉'}
                           </span>
+                        ) : (
+                          posizione
                         )}
-                        {posizione}
                       </td>
                       <td className="giocatore">
                         <Link to={`/giocatore/${item.id}`} className="giocatore-link">

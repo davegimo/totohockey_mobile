@@ -58,6 +58,9 @@
 
 .medal {
   font-size: 1.5rem;
+  display: block;
+  margin: 0 auto;
+  line-height: 1;
 }
 
 .giocatore {

@@ -215,12 +215,14 @@
 .pronostico-inputs-dashboard {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
 }
 
 .pronostico-input-dashboard {
   width: 60px;
+  height: 40px;
   text-align: center;
   font-size: var(--font-size-lg);
   font-weight: 600;
@@ -231,11 +233,14 @@
 
 .pronostico-input-dashboard:focus {
   border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
 }
 
 .pronostico-separator-dashboard {
   font-size: var(--font-size-lg);
   font-weight: 600;
+  margin: 0 var(--spacing-xs);
 }
 
 .salva-btn {
@@ -292,4 +297,9 @@
   .partite-list {
     grid-template-columns: 1fr;
   }
+}
+
+/* Rimuovo gli stili per i bottoni di incremento/decremento se presenti */
+.pronostico-button {
+  display: none;
 }

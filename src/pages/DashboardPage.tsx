@@ -12,6 +12,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pronostici, setPronostici] = useState<Record<string, { casa: number, ospite: number }>>({});
+  const [inputValues, setInputValues] = useState<Record<string, { casa: string, ospite: string }>>({});
   const [salvando, setSalvando] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [turnoAttuale, setTurnoAttuale] = useState<Turno | null>(null);
@@ -130,19 +131,16 @@ const DashboardPage = () => {
         
         setPartite(partiteConPronostici);
         
-        // Inizializza i pronostici con i valori esistenti o con 0-0
-        if (partiteConPronostici.length > 0) {
-          const initialPronostici: Record<string, { casa: number, ospite: number }> = {};
-          
-          partiteConPronostici.forEach(partita => {
-            initialPronostici[partita.id] = {
-              casa: partita.pronostico?.pronostico_casa || 0,
-              ospite: partita.pronostico?.pronostico_ospite || 0
-            };
-          });
-          
-          setPronostici(initialPronostici);
-        }
+        // Inizializza lo stato dei pronostici
+        const pronosticiIniziali: Record<string, { casa: number, ospite: number }> = {};
+        pronosticiData.forEach((p: Pronostico) => {
+          pronosticiIniziali[p.partita_id] = {
+            casa: p.pronostico_casa,
+            ospite: p.pronostico_ospite
+          };
+        });
+        
+        setPronostici(pronosticiIniziali);
       } catch (err: any) {
         setError(err.message || 'Errore nel caricamento delle partite');
       } finally {
@@ -195,24 +193,62 @@ const DashboardPage = () => {
     return dataLimite <= now;
   };
 
-  const handlePronosticoChange = (partitaId: string, tipo: 'casa' | 'ospite', valore: number) => {
-    console.log(`Cambio pronostico per partita ${partitaId}, tipo: ${tipo}, valore: ${valore}`);
+  const handlePronosticoChange = (partitaId: string, tipo: 'casa' | 'ospite', valore: string) => {
+    // Aggiorniamo i valori di input
+    setInputValues(prev => ({
+      ...prev,
+      [partitaId]: {
+        ...prev[partitaId] || { casa: '0', ospite: '0' },
+        [tipo]: valore
+      }
+    }));
     
-    setPronostici(prev => {
-      // Assicuriamoci che esista un pronostico per questa partita
-      const currentPronostico = prev[partitaId] || { casa: 0, ospite: 0 };
-      
-      const updatedPronostici = {
+    // Se il valore è una stringa vuota, non aggiorniamo i pronostici
+    if (valore === '') return;
+    
+    // Convertiamo il valore in numero
+    const numeroValore = parseInt(valore);
+    
+    // Se è un numero valido, aggiorniamo i pronostici
+    if (!isNaN(numeroValore)) {
+      setPronostici(prev => ({
         ...prev,
         [partitaId]: {
-          ...currentPronostico,
-          [tipo]: valore
+          ...prev[partitaId] || { casa: 0, ospite: 0 },
+          [tipo]: numeroValore
         }
-      };
-      
-      console.log('Pronostici aggiornati:', updatedPronostici);
-      return updatedPronostici;
-    });
+      }));
+    }
+  };
+
+  const handleButtonClick = (partitaId: string, tipo: 'casa' | 'ospite', operazione: 'incremento' | 'decremento') => {
+    // Otteniamo il valore corrente
+    const currentValue = pronostici[partitaId]?.[tipo] ?? 0;
+    
+    // Calcoliamo il nuovo valore
+    let nuovoValore = currentValue;
+    if (operazione === 'incremento') {
+      nuovoValore = currentValue + 1;
+    } else {
+      nuovoValore = Math.max(0, currentValue - 1);
+    }
+    
+    // Aggiorniamo sia i pronostici che i valori di input
+    setPronostici(prev => ({
+      ...prev,
+      [partitaId]: {
+        ...prev[partitaId] || { casa: 0, ospite: 0 },
+        [tipo]: nuovoValore
+      }
+    }));
+    
+    setInputValues(prev => ({
+      ...prev,
+      [partitaId]: {
+        ...prev[partitaId] || { casa: '0', ospite: '0' },
+        [tipo]: nuovoValore.toString()
+      }
+    }));
   };
 
   const salvaPronostico = async (partitaId: string) => {
@@ -222,28 +258,7 @@ const DashboardPage = () => {
       setSalvando(true);
       const pronostico = pronostici[partitaId];
       
-      console.log('Tentativo di salvare pronostico:', pronostico, 'per partita:', partitaId);
-      
-      if (!pronostico) {
-        console.log('Pronostico non trovato in state, inizializzo a 0-0');
-        // Se non c'è un pronostico nello state, inizializzalo a 0-0
-        const defaultPronostico = { casa: 0, ospite: 0 };
-        
-        const result = await savePronostico({
-          user_id: user.id,
-          partita_id: partitaId,
-          pronostico_casa: defaultPronostico.casa,
-          pronostico_ospite: defaultPronostico.ospite
-        });
-        
-        if (result.error) {
-          throw result.error;
-        }
-        
-        setSuccessMessage('Pronostico salvato con successo!');
-        setTimeout(() => setSuccessMessage(null), 3000);
-        return;
-      }
+      if (!pronostico) return;
       
       const result = await savePronostico({
         user_id: user.id,
@@ -259,7 +274,6 @@ const DashboardPage = () => {
       setSuccessMessage('Pronostico salvato con successo!');
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
-      console.error('Errore nel salvare il pronostico:', err);
       setError(err.message || 'Errore nel salvare il pronostico');
     } finally {
       setSalvando(false);
@@ -389,8 +403,14 @@ const DashboardPage = () => {
                         <input
                           type="number"
                           min="0"
-                          value={pronostici[partita.id]?.casa ?? 0}
-                          onChange={(e) => handlePronosticoChange(partita.id, 'casa', parseInt(e.target.value) || 0)}
+                          value={inputValues[partita.id]?.casa ?? pronostici[partita.id]?.casa ?? '0'}
+                          onChange={(e) => handlePronosticoChange(partita.id, 'casa', e.target.value)}
+                          onFocus={(e) => {
+                            // Quando l'input riceve il focus e il valore è 0, selezioniamo tutto il testo
+                            if (e.target.value === '0') {
+                              e.target.select();
+                            }
+                          }}
                           className="pronostico-input-dashboard"
                           disabled={partita.risultato_casa !== null && partita.risultato_ospite !== null || isPronosticoScaduto()}
                         />
@@ -398,8 +418,14 @@ const DashboardPage = () => {
                         <input
                           type="number"
                           min="0"
-                          value={pronostici[partita.id]?.ospite ?? 0}
-                          onChange={(e) => handlePronosticoChange(partita.id, 'ospite', parseInt(e.target.value) || 0)}
+                          value={inputValues[partita.id]?.ospite ?? pronostici[partita.id]?.ospite ?? '0'}
+                          onChange={(e) => handlePronosticoChange(partita.id, 'ospite', e.target.value)}
+                          onFocus={(e) => {
+                            // Quando l'input riceve il focus e il valore è 0, selezioniamo tutto il testo
+                            if (e.target.value === '0') {
+                              e.target.select();
+                            }
+                          }}
                           className="pronostico-input-dashboard"
                           disabled={partita.risultato_casa !== null && partita.risultato_ospite !== null || isPronosticoScaduto()}
                         />
