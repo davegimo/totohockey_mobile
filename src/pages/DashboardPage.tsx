@@ -221,36 +221,6 @@ const DashboardPage = () => {
     }
   };
 
-  const handleButtonClick = (partitaId: string, tipo: 'casa' | 'ospite', operazione: 'incremento' | 'decremento') => {
-    // Otteniamo il valore corrente
-    const currentValue = pronostici[partitaId]?.[tipo] ?? 0;
-    
-    // Calcoliamo il nuovo valore
-    let nuovoValore = currentValue;
-    if (operazione === 'incremento') {
-      nuovoValore = currentValue + 1;
-    } else {
-      nuovoValore = Math.max(0, currentValue - 1);
-    }
-    
-    // Aggiorniamo sia i pronostici che i valori di input
-    setPronostici(prev => ({
-      ...prev,
-      [partitaId]: {
-        ...prev[partitaId] || { casa: 0, ospite: 0 },
-        [tipo]: nuovoValore
-      }
-    }));
-    
-    setInputValues(prev => ({
-      ...prev,
-      [partitaId]: {
-        ...prev[partitaId] || { casa: '0', ospite: '0' },
-        [tipo]: nuovoValore.toString()
-      }
-    }));
-  };
-
   const salvaPronostico = async (partitaId: string) => {
     if (!user) return;
     
