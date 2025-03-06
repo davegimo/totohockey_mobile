@@ -119,7 +119,7 @@ const GiocatorePage = () => {
     } else if (punti === 1) {
       return <div className="punti-uno">✓</div>;
     } else if (punti === 3) {
-      return <div className="punti-tre">⭐⭐⭐</div>;
+      return <div className="punti-tre">✓✓✓</div>;
     }
     return null;
   };
@@ -172,7 +172,7 @@ const GiocatorePage = () => {
                                 ? 'campionato-femminile' 
                                 : 'campionato-maschile'
                             }`}>
-                              {pronostico.partita.campionato || 'Elite Maschile'}
+                              {pronostico.partita.campionato === 'Elite Femminile' ? 'F' : 'M'}
                             </div>
                             <div className="partita-teams">
                               <div className="team team-casa">

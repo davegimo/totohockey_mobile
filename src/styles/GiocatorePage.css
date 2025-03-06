@@ -276,9 +276,9 @@
 }
 
 .punti-tre {
-  color: #ffc107;
+  color: #43a047;
   font-size: 1.2rem;
-  letter-spacing: -2px;
+  letter-spacing: -9px;
 }
 
 .punti-pending {
@@ -324,11 +324,64 @@
     max-width: 70px;
   }
   
+  .team-logo {
+    width: 35px;
+    height: 35px;
+  }
+  
   .risultato-finale {
     font-size: 1rem;
   }
   
   .pronostico-info {
+    padding: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 576px) {
+  .team-name {
     font-size: 0.75rem;
+    max-width: 60px;
+  }
+  
+  .team-logo {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .partita-teams {
+    gap: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .team-name {
+    font-size: 0.7rem;
+    max-width: 50px;
+  }
+  
+  .team-logo {
+    width: 25px;
+    height: 25px;
+  }
+  
+  .partita-teams {
+    gap: var(--spacing-2xs);
+  }
+  
+  .pronostico-card {
+    padding: var(--spacing-2xs);
+  }
+}
+
+@media (max-width: 400px) {
+  .team-name {
+    font-size: 0.65rem;
+    max-width: 45px;
+  }
+  
+  .team-logo {
+    width: 22px;
+    height: 22px;
   }
 } 
