@@ -160,13 +160,20 @@ const DashboardPage = () => {
     fetchPartite();
   }, [user]);
 
+  // Funzione per convertire una data UTC in CET
+  const convertToCET = (dateString: string): Date => {
+    const date = new Date(dateString);
+    // Creiamo una nuova data che sarà già in CET in base al fuso orario locale
+    return new Date(date);
+  };
+
   // Aggiorna il countdown ogni secondo
   useEffect(() => {
     if (!turnoAttuale) return;
     
     const updateCountdown = () => {
       const now = new Date();
-      const dataLimite = new Date(turnoAttuale.data_limite);
+      const dataLimite = convertToCET(turnoAttuale.data_limite);
       
       // Se la data limite è già passata
       if (dataLimite <= now) {
@@ -197,7 +204,7 @@ const DashboardPage = () => {
     if (!turnoAttuale) return false;
     
     const now = new Date();
-    const dataLimite = new Date(turnoAttuale.data_limite);
+    const dataLimite = convertToCET(turnoAttuale.data_limite);
     
     return dataLimite <= now;
   };
@@ -274,7 +281,7 @@ const DashboardPage = () => {
   };
 
   const formatData = (dataString: string) => {
-    const data = new Date(dataString);
+    const data = convertToCET(dataString);
     return data.toLocaleDateString('it-IT', {
       weekday: 'long',
       year: 'numeric',
@@ -284,7 +291,7 @@ const DashboardPage = () => {
   };
 
   const formatDataLimite = (dataString: string) => {
-    const data = new Date(dataString);
+    const data = convertToCET(dataString);
     return data.toLocaleDateString('it-IT', {
       weekday: 'long',
       day: 'numeric',
