@@ -133,14 +133,23 @@ const DashboardPage = () => {
         
         // Inizializza lo stato dei pronostici
         const pronosticiIniziali: Record<string, { casa: number, ospite: number }> = {};
+        // Inizializza anche i valori di input
+        const inputValuesIniziali: Record<string, { casa: string, ospite: string }> = {};
+        
         pronosticiData.forEach((p: Pronostico) => {
           pronosticiIniziali[p.partita_id] = {
             casa: p.pronostico_casa,
             ospite: p.pronostico_ospite
           };
+          
+          inputValuesIniziali[p.partita_id] = {
+            casa: p.pronostico_casa.toString(),
+            ospite: p.pronostico_ospite.toString()
+          };
         });
         
         setPronostici(pronosticiIniziali);
+        setInputValues(inputValuesIniziali);
       } catch (err: any) {
         setError(err.message || 'Errore nel caricamento delle partite');
       } finally {
@@ -194,6 +203,11 @@ const DashboardPage = () => {
   };
 
   const handlePronosticoChange = (partitaId: string, tipo: 'casa' | 'ospite', valore: string) => {
+    // Verifichiamo che il valore contenga solo cifre
+    if (valore !== '' && !/^\d+$/.test(valore)) {
+      return; // Ignoriamo input non numerici
+    }
+    
     // Aggiorniamo i valori di input
     setInputValues(prev => ({
       ...prev,
@@ -209,15 +223,24 @@ const DashboardPage = () => {
     // Convertiamo il valore in numero
     const numeroValore = parseInt(valore);
     
-    // Se è un numero valido, aggiorniamo i pronostici
-    if (!isNaN(numeroValore)) {
-      setPronostici(prev => ({
-        ...prev,
-        [partitaId]: {
-          ...prev[partitaId] || { casa: 0, ospite: 0 },
-          [tipo]: numeroValore
-        }
-      }));
+    // Se è un numero valido e positivo, aggiorniamo i pronostici
+    if (!isNaN(numeroValore) && numeroValore >= 0) {
+      setPronostici(prev => {
+        // Otteniamo il pronostico corrente o inizializziamo con valori di default
+        const pronosticoCorrente = prev[partitaId] || { 
+          // Se esiste già un pronostico per questa partita nelle partite caricate, lo usiamo
+          casa: partite.find(p => p.id === partitaId)?.pronostico?.pronostico_casa || 0, 
+          ospite: partite.find(p => p.id === partitaId)?.pronostico?.pronostico_ospite || 0 
+        };
+        
+        return {
+          ...prev,
+          [partitaId]: {
+            ...pronosticoCorrente, // Manteniamo i valori esistenti
+            [tipo]: numeroValore   // Aggiorniamo solo il campo specifico
+          }
+        };
+      });
     }
   };
 
@@ -373,6 +396,8 @@ const DashboardPage = () => {
                         <input
                           type="number"
                           min="0"
+                          pattern="[0-9]*"
+                          inputMode="numeric"
                           value={inputValues[partita.id]?.casa ?? pronostici[partita.id]?.casa ?? '0'}
                           onChange={(e) => handlePronosticoChange(partita.id, 'casa', e.target.value)}
                           onFocus={(e) => {
@@ -388,6 +413,8 @@ const DashboardPage = () => {
                         <input
                           type="number"
                           min="0"
+                          pattern="[0-9]*"
+                          inputMode="numeric"
                           value={inputValues[partita.id]?.ospite ?? pronostici[partita.id]?.ospite ?? '0'}
                           onChange={(e) => handlePronosticoChange(partita.id, 'ospite', e.target.value)}
                           onFocus={(e) => {
