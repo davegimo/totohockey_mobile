@@ -85,7 +85,7 @@ const ClassificaPage = () => {
                         <Link to={`/giocatore/${item.id}`} className="giocatore-link">
                           {`${item.nome} ${item.cognome}`}
                           {isCurrentUser && (
-                            <span className="tu-label"> (Tu)</span>
+                            <span className="tu-label">(Tu)</span>
                           )}
                         </Link>
                       </td>
