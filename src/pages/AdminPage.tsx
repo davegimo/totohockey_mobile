@@ -193,7 +193,43 @@ const AdminPage = () => {
     }
     
     try {
-      const { error } = await createTurno(turnoFormData);
+      // Prendiamo la data dal form (che è in formato locale)
+      console.log('Data originale dal form:', turnoFormData.data_limite);
+      
+      // Creiamo un oggetto Date dalla stringa del form
+      // Il formato datetime-local restituisce una stringa in formato "YYYY-MM-DDThh:mm"
+      // Dobbiamo assicurarci che venga interpretata come ora locale, non UTC
+      const dataFormString = turnoFormData.data_limite;
+      
+      // Creiamo una data con l'ora locale specificata
+      const [dataPart, oraPart] = dataFormString.split('T');
+      const [anno, mese, giorno] = dataPart.split('-').map(Number);
+      const [ore, minuti] = oraPart.split(':').map(Number);
+      
+      // Creiamo una data con i componenti locali (mese è 0-based in JavaScript)
+      const dataLocale = new Date(anno, mese - 1, giorno, ore, minuti);
+      
+      // Convertiamo in UTC per il database
+      const dataUTC = new Date(
+        Date.UTC(
+          dataLocale.getFullYear(),
+          dataLocale.getMonth(),
+          dataLocale.getDate(),
+          dataLocale.getHours(),
+          dataLocale.getMinutes()
+        )
+      );
+      
+      console.log('Data locale creata:', dataLocale.toString());
+      console.log('Data UTC per il database:', dataUTC.toISOString());
+      
+      const turnoData = {
+        descrizione: turnoFormData.descrizione,
+        data_limite: dataUTC.toISOString()
+      };
+      
+      console.log('Dati turno da inviare:', turnoData);
+      const { error } = await createTurno(turnoData);
       
       if (error) {
         console.error('Errore durante la creazione del turno:', error);
