@@ -554,7 +554,7 @@ const DashboardPage = () => {
                         {/* Mostra "Pronostico non inserito" se il tempo è scaduto e non c'è un pronostico */}
                         {!partita.pronostico && isPronosticoScaduto() && (
                           <div className="match-pronostico-saved-dashboard">
-                            <div className="match-pronostico-saved-label-dashboard non-inserito">Pronostico non inserito</div>
+                            <div className="match-pronostico-saved-label-dashboard non-inserito">Nessun pronostico</div>
                           </div>
                         )}
                         
