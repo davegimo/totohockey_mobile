@@ -29,7 +29,7 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [pronostici, setPronostici] = useState<Record<string, { casa: number, ospite: number }>>({});
   const [inputValues, setInputValues] = useState<Record<string, { casa: string, ospite: string }>>({});
-  const [salvando, setSalvando] = useState(false);
+  const [salvandoPartite, setSalvandoPartite] = useState<Record<string, boolean>>({});
   const [turnoAttuale, setTurnoAttuale] = useState<Turno | null>(null);
   const [countdown, setCountdown] = useState<string>('');
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', id: number } | null>(null);
@@ -266,7 +266,11 @@ const DashboardPage = () => {
       return;
     }
     
-    setSalvando(true);
+    // Impostiamo lo stato di salvataggio solo per questa partita
+    setSalvandoPartite(prev => ({
+      ...prev,
+      [partitaId]: true
+    }));
     
     try {
       // Otteniamo il pronostico per questa partita
@@ -279,7 +283,10 @@ const DashboardPage = () => {
           pronostico.casa === undefined ||
           pronostico.ospite === undefined) {
         showToast('Inserisci un valore per entrambe le squadre', 'error');
-        setSalvando(false);
+        setSalvandoPartite(prev => ({
+          ...prev,
+          [partitaId]: false
+        }));
         return;
       }
       
@@ -290,7 +297,10 @@ const DashboardPage = () => {
       // Verifichiamo che i valori siano numeri validi
       if (isNaN(casaNum) || isNaN(ospiteNum)) {
         showToast('I valori devono essere numeri validi', 'error');
-        setSalvando(false);
+        setSalvandoPartite(prev => ({
+          ...prev,
+          [partitaId]: false
+        }));
         return;
       }
       
@@ -336,7 +346,11 @@ const DashboardPage = () => {
       console.error('Errore durante il salvataggio del pronostico:', error);
       showToast('Si è verificato un errore durante il salvataggio del pronostico', 'error');
     } finally {
-      setSalvando(false);
+      // Resettiamo lo stato di salvataggio solo per questa partita
+      setSalvandoPartite(prev => ({
+        ...prev,
+        [partitaId]: false
+      }));
     }
   };
 
@@ -563,9 +577,9 @@ const DashboardPage = () => {
                           <button 
                             onClick={() => salvaPronostico(partita.id)} 
                             className="match-bet-place-dashboard"
-                            disabled={salvando}
+                            disabled={salvandoPartite[partita.id]}
                           >
-                            {salvando ? 'Salvando...' : partita.pronostico ? 'Aggiorna pronostico' : 'Inserisci pronostico'}
+                            {salvandoPartite[partita.id] ? 'Salvando...' : partita.pronostico ? 'Aggiorna pronostico' : 'Inserisci pronostico'}
                           </button>
                         )}
                       </div>
