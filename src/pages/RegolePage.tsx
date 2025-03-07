@@ -5,11 +5,11 @@ const RegolePage = () => {
   return (
     <Layout>
       <div className="regole-page">
-        <h1>Regole del Gioco</h1>
+        <h1>Regolamento</h1>
         
         <section className="regole-intro">
           <p>
-            Benvenuto a TotoHockey, il gioco di pronostici dedicato all'hockey su prato italiano!
+            Totohockey è il gioco di pronostici dedicato all'hockey su prato italiano!
             Qui troverai tutte le informazioni necessarie per partecipare e competere con gli altri appassionati.
           </p>
         </section>
@@ -20,7 +20,7 @@ const RegolePage = () => {
             <div className="feature-card">
               <div className="feature-icon">📝</div>
               <h3>Pronostica</h3>
-              <p>Inserisci i tuoi pronostici per le partite del weekend entro le 23:59 del venerdì precedente.</p>
+              <p>Inserisci i tuoi pronostici per le partite del weekend!</p>
             </div>
             
             <div className="feature-card">
@@ -38,13 +38,13 @@ const RegolePage = () => {
             <div className="feature-card">
               <div className="feature-icon">⏱️</div>
               <h3>Tempistiche</h3>
-              <p>I pronostici sono accettati fino all'inizio della partita. I risultati vengono aggiornati entro 24 ore.</p>
+              <p>I pronostici sono accettati fino alla data specificata nella sezione Partita. I risultati vengono aggiornati entro 24 ore.</p>
             </div>
             
             <div className="feature-card">
               <div className="feature-icon">🔄</div>
               <h3>Modifiche</h3>
-              <p>Puoi modificare i tuoi pronostici fino all'inizio della partita, l'ultimo inserito sarà quello valido.</p>
+              <p>Puoi modificare i tuoi pronostici fino alla data specificata nella sezione Partita ma l'ultimo inserito sarà quello valido.</p>
             </div>
             
             <div className="feature-card">

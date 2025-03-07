@@ -81,16 +81,27 @@ const GiocatorePage = () => {
         
         console.log('Pronostici recuperati:', turniConPronostici);
         
+        // Filtra i pronostici per mostrare solo quelli con risultati definitivi
+        const turniConPronosticiFiltrati = turniConPronostici?.map(turno => {
+          return {
+            ...turno,
+            pronostici: turno.pronostici.filter(pronostico => 
+              pronostico.partita.risultato_casa !== null && 
+              pronostico.partita.risultato_ospite !== null
+            )
+          };
+        }).filter(turno => turno.pronostici.length > 0) || [];
+        
         // Verifica i valori del campionato
-        if (turniConPronostici && turniConPronostici.length > 0) {
-          turniConPronostici.forEach(turno => {
+        if (turniConPronosticiFiltrati && turniConPronosticiFiltrati.length > 0) {
+          turniConPronosticiFiltrati.forEach(turno => {
             turno.pronostici.forEach(pronostico => {
               console.log('Campionato partita:', pronostico.partita.campionato);
             });
           });
         }
         
-        setTurniConPronostici(turniConPronostici || []);
+        setTurniConPronostici(turniConPronosticiFiltrati);
         setLoading(false);
       } catch (err: any) {
         console.error('Errore:', err);

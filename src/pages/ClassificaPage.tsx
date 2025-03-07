@@ -43,7 +43,13 @@ const ClassificaPage = () => {
   return (
     <Layout>
       <div className="classifica-page">
-        <h1>Classifica</h1>
+        <h1>Classifica Generale</h1>
+
+        <section className="regole-intro">
+          <p>
+            Qui puoi vedere la classifica generale dei giocatori. Una volta che i risultati delle partite sono stati inseriti, potrai vedere la tua posizione nella classifica e confrontarti con gli altri giocatori cliccando sul loro nome!
+          </p>
+        </section>
         
         {error && <div className="error">{error}</div>}
         

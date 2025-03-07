@@ -356,12 +356,28 @@ const DashboardPage = () => {
 
   const formatData = (dataString: string) => {
     const data = convertToCET(dataString);
-    return data.toLocaleDateString('it-IT', {
+    const giorniAbbreviati: Record<string, string> = {
+      'lunedì': 'lun',
+      'martedì': 'mar',
+      'mercoledì': 'mer',
+      'giovedì': 'gio',
+      'venerdì': 'ven',
+      'sabato': 'sab',
+      'domenica': 'dom'
+    };
+    
+    const formatoCompleto = data.toLocaleDateString('it-IT', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+    
+    // Sostituiamo il nome del giorno con l'abbreviazione
+    const giorno = data.toLocaleDateString('it-IT', { weekday: 'long' });
+    const giornoAbbreviato = giorniAbbreviati[giorno] || giorno;
+    
+    return formatoCompleto.replace(giorno, giornoAbbreviato);
   };
 
   const formatDataLimite = (dataString: string) => {
@@ -436,7 +452,7 @@ const DashboardPage = () => {
           {turnoAttuale && !isPronosticoScaduto() && (
             <div className="turno-countdown">
               <p className="countdown-message">
-                Hai tempo fino a {formatDataLimite(turnoAttuale.data_limite)} per inserire il tuo pronostico!
+                Hai tempo fino a {formatDataLimite(turnoAttuale.data_limite)} per inserire i tuoi pronostici!
               </p>
               <div className="countdown-timer">{countdown}</div>
             </div>
