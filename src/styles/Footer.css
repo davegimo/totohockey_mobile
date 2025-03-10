@@ -16,4 +16,16 @@
 .footer p {
   margin: 0;
   font-size: var(--font-size-sm);
+}
+
+/* Stile specifico per iOS in modalità standalone */
+@media (display-mode: standalone) {
+  .footer {
+    background-color: transparent;
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
+  }
+  
+  .footer-content {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 } 

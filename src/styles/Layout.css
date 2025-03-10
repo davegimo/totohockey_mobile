@@ -7,4 +7,16 @@
 .main-content {
   flex: 1;
   padding: var(--spacing-lg) 0;
+}
+
+/* Stile specifico per iOS in modalità standalone */
+@media (display-mode: standalone) {
+  .layout {
+    min-height: 100%;
+  }
+  
+  .main-content {
+    /* Rimuove il padding inferiore per evitare spazio bianco sopra la home indicator */
+    padding-bottom: 0;
+  }
 } 

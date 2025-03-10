@@ -173,6 +173,8 @@ input:focus, select:focus, textarea:focus {
   html {
     height: 100%;
     overflow: hidden;
+    /* Imposta il colore di sfondo per la home indicator */
+    background-color: transparent;
   }
   
   body {
@@ -182,6 +184,14 @@ input:focus, select:focus, textarea:focus {
     user-select: none;
     /* Previene il doppio tap per lo zoom su Android */
     touch-action: manipulation;
+    /* Imposta il colore di sfondo per la home indicator */
+    background-color: transparent;
+  }
+  
+  /* Stile per rendere trasparente la home indicator */
+  .footer, footer {
+    background-color: transparent !important;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   
   /* Stili specifici per Android */
