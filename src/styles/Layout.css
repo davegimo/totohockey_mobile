@@ -7,21 +7,4 @@
 .main-content {
   flex: 1;
   padding: var(--spacing-lg) 0;
-}
-
-/* Stile specifico per iOS in modalità standalone */
-@media (display-mode: standalone) {
-  .layout {
-    min-height: 100%;
-    /* Assicura che il layout occupi tutto lo spazio disponibile */
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .main-content {
-    /* Mantiene il padding inferiore per dare spazio al footer */
-    padding-bottom: var(--spacing-lg);
-    /* Assicura che il contenuto principale occupi tutto lo spazio disponibile */
-    flex: 1;
-  }
 } 

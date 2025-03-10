@@ -188,13 +188,17 @@ input:focus, select:focus, textarea:focus {
     background-color: transparent;
   }
   
-  /* Stile per rendere trasparente la home indicator ma mantenere il footer visibile */
-  .footer, footer {
-    /* Il footer è visibile ma con sfondo trasparente */
-    background-color: transparent !important;
-    /* Assicura che il footer sia visibile sopra la home indicator */
-    position: relative;
-    z-index: 10;
+  /* Rimuove la barra bianca sopra la home indicator */
+  html::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-bottom);
+    background-color: transparent;
+    z-index: 9999;
+    pointer-events: none;
   }
   
   /* Stili specifici per Android */

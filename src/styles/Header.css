@@ -54,8 +54,6 @@
   /* Assicura che il contenuto principale occupi tutto lo spazio disponibile */
   #root {
     min-height: calc(100% - var(--header-height) - env(safe-area-inset-top));
-    /* Aggiunge spazio in fondo per evitare che il contenuto sia nascosto sotto la home indicator */
-    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
