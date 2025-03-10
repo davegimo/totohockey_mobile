@@ -13,7 +13,11 @@
 /* Stile specifico per iOS in modalità standalone */
 @media (display-mode: standalone) {
   .header {
-    background-color: black; /* Stessa tonalità della barra di stato */
+    position: fixed; /* Cambiato da sticky a fixed */
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--primary-color); /* Mantiene il colore verde */
     padding-top: env(safe-area-inset-top); /* Aggiunge spazio per la barra di stato */
     height: calc(var(--header-height) + env(safe-area-inset-top)); /* Aumenta l'altezza */
   }
@@ -27,6 +31,11 @@
   
   .logo h1 {
     margin-top: 0; /* Rimuove il margine superiore */
+  }
+  
+  /* Aggiunge padding al body per compensare l'header fixed */
+  body {
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top));
   }
 }
 

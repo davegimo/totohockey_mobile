@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#1e8449",
   "icons": [
     {
       "src": "https://fpwoioyevwhsrlasyynp.supabase.co/storage/v1/object/sign/squadre/logowhatsapp.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJzcXVhZHJlL2xvZ293aGF0c2FwcC5wbmciLCJpYXQiOjE3NDEzNDE4OTMsImV4cCI6NDg5NDk0MTg5M30.WGII43W2lOBolX6qC6nmpGCe0ChDNRZtQw54biw9pls",

@@ -178,8 +178,8 @@ input:focus, select:focus, textarea:focus {
     user-select: none;
     /* Previene il doppio tap per lo zoom su Android */
     touch-action: manipulation;
-    /* Aggiunge padding in alto per evitare che il contenuto finisca sotto la barra di stato */
-    padding-top: env(safe-area-inset-top);
+    /* Assicura che il contenuto non scorra sotto la barra di stato */
+    position: relative;
   }
   
   /* Aggiunge padding per evitare che il contenuto finisca sotto la barra di stato */
@@ -187,6 +187,8 @@ input:focus, select:focus, textarea:focus {
     min-height: 100vh;
     min-height: -webkit-fill-available;
     padding-bottom: env(safe-area-inset-bottom);
+    /* Assicura che il contenuto non scorra sotto l'header */
+    position: relative;
   }
   
   /* Stili specifici per Android */
