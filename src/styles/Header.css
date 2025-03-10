@@ -13,29 +13,44 @@
 /* Stile specifico per iOS in modalità standalone */
 @media (display-mode: standalone) {
   .header {
-    position: fixed; /* Cambiato da sticky a fixed */
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    background-color: var(--primary-color); /* Mantiene il colore verde */
-    padding-top: env(safe-area-inset-top); /* Aggiunge spazio per la barra di stato */
-    height: calc(var(--header-height) + env(safe-area-inset-top)); /* Aumenta l'altezza */
+    width: 100%;
+    background-color: var(--primary-color);
+    /* Estende l'header fino alla barra di stato */
+    padding-top: env(safe-area-inset-top);
+    height: calc(var(--header-height) + env(safe-area-inset-top));
+    /* Assicura che l'header sia sopra tutti gli altri elementi */
+    z-index: 1000;
   }
   
   .header-content {
-    padding-top: 0; /* Rimuove il padding interno */
-    height: var(--header-height); /* Mantiene l'altezza originale del contenuto */
-    position: relative;
-    top: 0;
-  }
-  
-  .logo h1 {
-    margin-top: 0; /* Rimuove il margine superiore */
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    width: 100%;
   }
   
   /* Aggiunge padding al body per compensare l'header fixed */
   body {
     padding-top: calc(var(--header-height) + env(safe-area-inset-top));
+    /* Assicura che il contenuto non scorra sotto l'header */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    /* Previene il rimbalzo dello scroll su iOS */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Assicura che il contenuto principale occupi tutto lo spazio disponibile */
+  #root {
+    min-height: calc(100% - var(--header-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   }
 }
 

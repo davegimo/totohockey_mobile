@@ -170,34 +170,22 @@ input:focus, select:focus, textarea:focus {
 
 /* Stili per PWA su iOS */
 @media (display-mode: standalone) {
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
+  
   body {
-    /* Previene il comportamento di rimbalzo/scroll eccessivo su iOS */
-    -webkit-overflow-scrolling: touch;
+    /* Questi stili sono ora gestiti in Header.css */
     /* Disabilita la selezione del testo per un'esperienza più simile a un'app nativa */
     -webkit-user-select: none;
     user-select: none;
     /* Previene il doppio tap per lo zoom su Android */
     touch-action: manipulation;
-    /* Assicura che il contenuto non scorra sotto la barra di stato */
-    position: relative;
-  }
-  
-  /* Aggiunge padding per evitare che il contenuto finisca sotto la barra di stato */
-  #root {
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    padding-bottom: env(safe-area-inset-bottom);
-    /* Assicura che il contenuto non scorra sotto l'header */
-    position: relative;
   }
   
   /* Stili specifici per Android */
   @supports (-webkit-appearance:none) and (not (overflow:-webkit-marquee)) and (not (-ms-ime-align:auto)) and (not (-moz-appearance:none)) {
-    /* Migliora la fluidità dello scroll su Android */
-    body {
-      overscroll-behavior-y: none;
-    }
-    
     /* Migliora l'aspetto dei bottoni su Android */
     button, .button {
       -webkit-tap-highlight-color: transparent;
