@@ -178,26 +178,15 @@ input:focus, select:focus, textarea:focus {
     user-select: none;
     /* Previene il doppio tap per lo zoom su Android */
     touch-action: manipulation;
-  }
-  
-  /* Nasconde la barra di stato su iOS */
-  body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-top);
-    background-color: #000000;
-    z-index: 10000;
+    /* Aggiunge padding in alto per evitare che il contenuto finisca sotto la barra di stato */
+    padding-top: env(safe-area-inset-top);
   }
   
   /* Aggiunge padding per evitare che il contenuto finisca sotto la barra di stato */
   #root {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
     min-height: 100vh;
     min-height: -webkit-fill-available;
+    padding-bottom: env(safe-area-inset-bottom);
   }
   
   /* Stili specifici per Android */
