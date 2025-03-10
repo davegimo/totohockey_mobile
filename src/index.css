@@ -167,3 +167,74 @@ input:focus, select:focus, textarea:focus {
     padding: var(--spacing-md);
   }
 }
+
+/* Stili per PWA su iOS */
+@media (display-mode: standalone) {
+  body {
+    /* Previene il comportamento di rimbalzo/scroll eccessivo su iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Disabilita la selezione del testo per un'esperienza più simile a un'app nativa */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Previene il doppio tap per lo zoom su Android */
+    touch-action: manipulation;
+  }
+  
+  /* Nasconde la barra di stato su iOS */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background-color: #000000;
+    z-index: 10000;
+  }
+  
+  /* Aggiunge padding per evitare che il contenuto finisca sotto la barra di stato */
+  #root {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Stili specifici per Android */
+  @supports (-webkit-appearance:none) and (not (overflow:-webkit-marquee)) and (not (-ms-ime-align:auto)) and (not (-moz-appearance:none)) {
+    /* Migliora la fluidità dello scroll su Android */
+    body {
+      overscroll-behavior-y: none;
+    }
+    
+    /* Migliora l'aspetto dei bottoni su Android */
+    button, .button {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Rimuove il bordo blu quando si fa tap su elementi interattivi */
+    a, button, input, select, textarea {
+      -webkit-tap-highlight-color: transparent;
+    }
+  }
+}
+
+/* Fix per l'altezza su iOS */
+html {
+  height: -webkit-fill-available;
+}
+
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  /* Previene il doppio tap per lo zoom su Android */
+  touch-action: manipulation;
+}
+
+/* Stili per la modalità a schermo intero su Android */
+@media all and (display-mode: fullscreen) {
+  body {
+    /* Nasconde la barra di navigazione su Android */
+    overscroll-behavior: none;
+  }
+}
