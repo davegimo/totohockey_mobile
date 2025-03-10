@@ -13,10 +13,15 @@
 @media (display-mode: standalone) {
   .layout {
     min-height: 100%;
+    /* Assicura che il layout occupi tutto lo spazio disponibile */
+    display: flex;
+    flex-direction: column;
   }
   
   .main-content {
-    /* Rimuove il padding inferiore per evitare spazio bianco sopra la home indicator */
-    padding-bottom: 0;
+    /* Mantiene il padding inferiore per dare spazio al footer */
+    padding-bottom: var(--spacing-lg);
+    /* Assicura che il contenuto principale occupi tutto lo spazio disponibile */
+    flex: 1;
   }
 } 

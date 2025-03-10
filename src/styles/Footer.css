@@ -21,11 +21,31 @@
 /* Stile specifico per iOS in modalità standalone */
 @media (display-mode: standalone) {
   .footer {
+    /* Mantiene il footer visibile ma con sfondo trasparente */
     background-color: transparent;
+    /* Aggiunge padding per la home indicator */
     padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
+    /* Assicura che il footer rimanga visibile */
+    position: relative;
+    z-index: 10;
   }
   
   .footer-content {
+    /* Mantiene il contenuto del footer visibile */
+    color: var(--text-light);
+    /* Aggiunge padding per la home indicator */
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Aggiunge un background sfumato per migliorare la leggibilità del testo */
+  .footer::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: linear-gradient(to top, rgba(30, 132, 73, 0.7), transparent);
+    z-index: -1;
   }
 } 
