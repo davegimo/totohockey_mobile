@@ -544,106 +544,102 @@ export const updateRisultatoPartita = async (partitaId: string, risultatoCasa: n
 // Funzione per aggiornare i punteggi dei pronostici in base al risultato
 const aggiornaPronosticiPunti = async (partitaId: string, risultatoCasa: number, risultatoOspite: number) => {
   try {
-    // Ottieni tutti i pronostici per questa partita
-    const { data: pronostici, error } = await supabase
+    console.log(`Aggiornamento punti per i pronostici della partita ${partitaId}`);
+    
+    // Prima otteniamo il numero totale di pronostici per questa partita
+    const { count: totalPronostici, error: countError } = await supabase
       .from('pronostici')
-      .select('*')
+      .select('*', { count: 'exact', head: true })
       .eq('partita_id', partitaId);
       
-    if (error || !pronostici) {
-      console.error('Errore nel recupero dei pronostici:', error);
-      return;
+    if (countError) {
+      console.error('Errore nel conteggio dei pronostici:', countError);
+    } else {
+      console.log(`Trovati ${totalPronostici} pronostici da aggiornare per questa partita`);
     }
     
-    console.log(`Trovati ${pronostici.length} pronostici da aggiornare`);
+    // Aggiorna i pronostici con risultato esatto (3 punti)
+    const { error: errorRisultatoEsatto } = await supabase.rpc('aggiorna_punti_risultato_esatto', {
+      p_partita_id: partitaId,
+      p_risultato_casa: risultatoCasa,
+      p_risultato_ospite: risultatoOspite
+    });
     
-    // Aggiorna i punti per ogni pronostico
-    for (const pronostico of pronostici) {
-      let punti = 0;
-      
-      // Risultato esatto: 3 punti
-      if (pronostico.pronostico_casa === risultatoCasa && 
-          pronostico.pronostico_ospite === risultatoOspite) {
-        punti = 3;
-      } 
-      // Esito corretto (vittoria/pareggio/sconfitta): 1 punto
-      else if (
-        (pronostico.pronostico_casa > pronostico.pronostico_ospite && risultatoCasa > risultatoOspite) ||
-        (pronostico.pronostico_casa < pronostico.pronostico_ospite && risultatoCasa < risultatoOspite) ||
-        (pronostico.pronostico_casa === pronostico.pronostico_ospite && risultatoCasa === risultatoOspite)
-      ) {
-        punti = 1;
-      }
-      
-      // Aggiorna i punti del pronostico
-      const { error: updateError } = await supabase
-        .from('pronostici')
-        .update({ punti })
-        .eq('id', pronostico.id);
+    // Verifichiamo quanti pronostici sono stati aggiornati con risultato esatto
+    const { count: countEsatti } = await supabase
+      .from('pronostici')
+      .select('*', { count: 'exact', head: true })
+      .eq('partita_id', partitaId)
+      .eq('punti', 3);
         
-      if (updateError) {
-        console.error(`Errore nell'aggiornamento dei punti per il pronostico ${pronostico.id}:`, updateError);
-      }
+    if (errorRisultatoEsatto) {
+      console.error('Errore nell\'aggiornamento dei punti per risultato esatto:', errorRisultatoEsatto);
+    } else {
+      console.log(`Aggiornamento punti per risultato esatto completato: ${countEsatti || 0} pronostici con risultato esatto`);
+    }
+    
+    // Aggiorna i pronostici con esito corretto (1 punto)
+    const { error: errorEsitoCorretto } = await supabase.rpc('aggiorna_punti_esito_corretto', {
+      p_partita_id: partitaId,
+      p_risultato_casa: risultatoCasa,
+      p_risultato_ospite: risultatoOspite
+    });
+    
+    // Verifichiamo quanti pronostici sono stati aggiornati con esito corretto
+    const { count: countEsiti } = await supabase
+      .from('pronostici')
+      .select('*', { count: 'exact', head: true })
+      .eq('partita_id', partitaId)
+      .eq('punti', 1);
+    
+    if (errorEsitoCorretto) {
+      console.error('Errore nell\'aggiornamento dei punti per esito corretto:', errorEsitoCorretto);
+    } else {
+      console.log(`Aggiornamento punti per esito corretto completato: ${countEsiti || 0} pronostici con esito corretto`);
+    }
+    
+    // Aggiorna i pronostici con risultato sbagliato (0 punti)
+    const { error: errorRisultatoSbagliato } = await supabase.rpc('aggiorna_punti_risultato_sbagliato', {
+      p_partita_id: partitaId
+    });
+    
+    // Verifichiamo quanti pronostici sono stati aggiornati con risultato sbagliato
+    const { count: countSbagliati } = await supabase
+      .from('pronostici')
+      .select('*', { count: 'exact', head: true })
+      .eq('partita_id', partitaId)
+      .eq('punti', 0);
+    
+    if (errorRisultatoSbagliato) {
+      console.error('Errore nell\'aggiornamento dei punti per risultato sbagliato:', errorRisultatoSbagliato);
+    } else {
+      console.log(`Aggiornamento punti per risultato sbagliato completato: ${countSbagliati || 0} pronostici con risultato sbagliato`);
     }
     
     console.log('Punti dei pronostici aggiornati con successo');
     
     // Aggiorna i punteggi totali degli utenti
-    await aggiornaClassifica();
+    await aggiornaClassificaMassiva();
     
   } catch (error) {
     console.error('Errore durante l\'aggiornamento dei punti:', error);
   }
 };
 
-// Funzione per aggiornare la classifica generale
-const aggiornaClassifica = async () => {
+// Funzione per aggiornare la classifica generale in modo massivo
+const aggiornaClassificaMassiva = async () => {
   try {
-    console.log('Inizio aggiornamento classifica generale...');
+    console.log('Inizio aggiornamento classifica generale in modo massivo...');
     
-    // Per ogni utente, calcola la somma dei punti di tutti i suoi pronostici
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('id');
-      
-    if (error || !profiles) {
-      console.error('Errore nel recupero degli utenti:', error);
+    // Aggiorna i punteggi di tutti gli utenti in una singola query
+    const { error } = await supabase.rpc('aggiorna_punteggi_utenti');
+    
+    if (error) {
+      console.error('Errore nell\'aggiornamento massivo della classifica:', error);
       return;
     }
     
-    console.log(`Trovati ${profiles.length} utenti da aggiornare`);
-    
-    for (const profile of profiles) {
-      // Calcola il punteggio totale dell'utente
-      const { data: pronostici, error: sumError } = await supabase
-        .from('pronostici')
-        .select('punti')
-        .eq('user_id', profile.id);
-        
-      if (sumError || !pronostici) {
-        console.error(`Errore nel calcolo del punteggio per l'utente ${profile.id}:`, sumError);
-        continue;
-      }
-      
-      // Somma i punti (escludendo i null)
-      const punteggioTotale = pronostici
-        .map(p => p.punti || 0)
-        .reduce((sum, current) => sum + current, 0);
-      
-      console.log(`Aggiornamento punteggio per utente ${profile.id}: ${punteggioTotale} punti`);
-      
-      // Aggiorna il punteggio dell'utente
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ punteggio: punteggioTotale })
-        .eq('id', profile.id);
-        
-      if (updateError) {
-        console.error(`Errore nell'aggiornamento del punteggio per l'utente ${profile.id}:`, updateError);
-      }
-    }
-    
-    console.log('Classifica aggiornata con successo');
+    console.log('Classifica aggiornata con successo in modo massivo');
     
   } catch (error) {
     console.error('Errore durante l\'aggiornamento della classifica:', error);
@@ -653,11 +649,8 @@ const aggiornaClassifica = async () => {
 // Classifica functions
 export const getClassifica = async () => {
   const { data, error } = await supabase
-    .from('vista_giocatori')
-    .select('id_giocatore, nome, cognome, punti_totali, risultati_esatti, esiti_presi')
-    .order('punti_totali', { ascending: false })
-    .order('risultati_esatti', { ascending: false })
-    .order('esiti_presi', { ascending: false });
+    .from('vista_classifica')
+    .select('id_giocatore, nome, cognome, punti_totali, risultati_esatti, esiti_presi');
   
   return { classifica: data || [], error };
 };
@@ -687,122 +680,14 @@ export const ricalcolaPunteggiUtenti = async () => {
     
     console.log(`Trovate ${partite.length} partite con risultati da elaborare`);
     
-    // Ottieni tutti i pronostici
-    const { data: pronostici, error: pronosticiError } = await supabase
-      .from('pronostici')
-      .select('*');
-      
-    if (pronosticiError || !pronostici) {
-      console.error('Errore nel recupero dei pronostici:', pronosticiError);
-      return { success: false, error: pronosticiError };
-    }
-    
-    console.log(`Trovati ${pronostici.length} pronostici da elaborare`);
-    
-    // Raggruppa i pronostici per partita per un accesso più efficiente
-    const pronosticiPerPartita = pronostici.reduce((acc, pronostico) => {
-      if (!acc[pronostico.partita_id]) {
-        acc[pronostico.partita_id] = [];
-      }
-      acc[pronostico.partita_id].push(pronostico);
-      return acc;
-    }, {});
-    
-    // Resetta tutti i punti nei pronostici
-    console.log('Resettando tutti i punti nei pronostici...');
-    const { error: resetError } = await supabase.rpc('reset_all_pronostici_punti');
-    
-    if (resetError) {
-      console.error('Errore nel reset dei punti dei pronostici:', resetError);
-      console.log('Tentativo di reset manuale dei pronostici...');
-      
-      // Fallback: reset manuale
-      const batchSize = 50;
-      for (let i = 0; i < pronostici.length; i += batchSize) {
-        const batch = pronostici.slice(i, i + batchSize);
-        
-        for (const pronostico of batch) {
-          const { error } = await supabase
-            .from('pronostici')
-            .update({ punti: null })
-            .eq('id', pronostico.id);
-            
-          if (error) {
-            console.error(`Errore nel reset del pronostico ${pronostico.id}:`, error);
-          }
-        }
-      }
-    }
-    
-    // Per ogni partita con risultato, aggiorna i punti dei pronostici
-    let pronosticiAggiornati = 0;
+    // Per ogni partita, aggiorna i punti dei pronostici
     for (const partita of partite) {
-      console.log(`Elaborazione partita ${partita.id}: risultato ${partita.risultato_casa}-${partita.risultato_ospite}`);
-      
-      const pronosticiPartita = pronosticiPerPartita[partita.id] || [];
-      console.log(`Trovati ${pronosticiPartita.length} pronostici per questa partita`);
-      
-      // Aggiorna i punti in batch per questa partita
-      const { error: updateError } = await supabase.rpc('update_pronostici_punti', { 
-        p_partita_id: partita.id,
-        p_risultato_casa: partita.risultato_casa,
-        p_risultato_ospite: partita.risultato_ospite
-      });
-      
-      if (updateError) {
-        console.error(`Errore nell'aggiornamento batch dei pronostici per la partita ${partita.id}:`, updateError);
-        console.log('Tentativo di aggiornamento manuale dei pronostici...');
-        
-        // Fallback: aggiornamento manuale
-        for (const pronostico of pronosticiPartita) {
-          let punti = 0;
-          
-          // Risultato esatto: 3 punti
-          if (pronostico.pronostico_casa === partita.risultato_casa && 
-              pronostico.pronostico_ospite === partita.risultato_ospite) {
-            punti = 3;
-          } 
-          // Esito corretto (vittoria/pareggio/sconfitta): 1 punto
-          else if (
-            (pronostico.pronostico_casa > pronostico.pronostico_ospite && partita.risultato_casa > partita.risultato_ospite) ||
-            (pronostico.pronostico_casa < pronostico.pronostico_ospite && partita.risultato_casa < partita.risultato_ospite) ||
-            (pronostico.pronostico_casa === pronostico.pronostico_ospite && partita.risultato_casa === partita.risultato_ospite)
-          ) {
-            punti = 1;
-          }
-          
-          console.log(`Pronostico ${pronostico.id}: ${pronostico.pronostico_casa}-${pronostico.pronostico_ospite} => ${punti} punti`);
-          
-          // Aggiorna i punti del pronostico
-          const { error } = await supabase
-            .from('pronostici')
-            .update({ punti })
-            .eq('id', pronostico.id);
-            
-          if (error) {
-            console.error(`Errore nell'aggiornamento del pronostico ${pronostico.id}:`, error);
-          } else {
-            pronosticiAggiornati++;
-          }
-        }
-      } else {
-        pronosticiAggiornati += pronosticiPartita.length;
-      }
+      await aggiornaPronosticiPunti(partita.id, partita.risultato_casa, partita.risultato_ospite);
     }
     
-    console.log(`Aggiornati con successo ${pronosticiAggiornati} pronostici`);
+    // Aggiorna la classifica generale in modo massivo
+    await aggiornaClassificaMassiva();
     
-    // Aggiorna la classifica generale
-    console.log('Aggiornamento classifica generale...');
-    const { error: classificaError } = await supabase.rpc('update_all_user_scores');
-    
-    if (classificaError) {
-      console.error('Errore nell\'aggiornamento della classifica con RPC:', classificaError);
-      console.log('Tentativo di aggiornamento manuale della classifica...');
-      await aggiornaClassifica();
-    }
-    
-    console.log('Ricalcolo punteggi completato con successo');
     return { success: true, error: null };
   } catch (error) {
     console.error('Errore durante il ricalcolo dei punteggi:', error);
