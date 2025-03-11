@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { getClassifica } from '../services/supabase';
 import { useSession } from '../context/SessionContext';
 import '../styles/ClassificaPage.css';
-import PullToRefresh from '../components/PullToRefresh';
+import PullToRefreshWrapper from '../components/PullToRefreshWrapper';
 
 type ClassificaItem = {
   id_giocatore: string;
@@ -90,11 +90,7 @@ const ClassificaPage = () => {
 
   return (
     <Layout>
-      <PullToRefresh 
-        onRefresh={handleRefresh}
-        pullDownThreshold={70}
-        backgroundColor="transparent"
-      >
+      <PullToRefreshWrapper onRefresh={handleRefresh}>
         <div className="classifica-page">
           <h1>Classifica Generale</h1>
           
@@ -146,11 +142,11 @@ const ClassificaPage = () => {
                       <tr key={item.id_giocatore} className={isCurrentUser ? 'current-user' : ''}>
                         <td className="posizione">
                           {posizione === 1 ? (
-                            <span className="medal">🥇</span>
+                            <span key="gold" className="medal">🥇</span>
                           ) : posizione === 2 ? (
-                            <span className="medal">🥈</span>
+                            <span key="silver" className="medal">🥈</span>
                           ) : posizione === 3 ? (
-                            <span className="medal">🥉</span>
+                            <span key="bronze" className="medal">🥉</span>
                           ) : (
                             posizione
                           )}
@@ -180,7 +176,7 @@ const ClassificaPage = () => {
             </div>
           )}
         </div>
-      </PullToRefresh>
+      </PullToRefreshWrapper>
     </Layout>
   );
 };
