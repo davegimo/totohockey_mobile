@@ -20,18 +20,32 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const startYRef = useRef(0);
   const currentYRef = useRef(0);
+  const [isIOS, setIsIOS] = useState(false);
+
+  // Controlla se il dispositivo è iOS
+  useEffect(() => {
+    const checkIsIOS = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+    
+    setIsIOS(checkIsIOS());
+  }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
+    // Se è iOS, non fare nulla
+    if (isIOS) return;
+    
     // Verifica se siamo all'inizio della pagina
     if (window.scrollY === 0) {
       startYRef.current = e.touches[0].clientY;
       currentYRef.current = startYRef.current;
       setIsPulling(true);
     }
-  }, []);
+  }, [isIOS]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isPulling) return;
+    if (!isPulling || isIOS) return;
 
     currentYRef.current = e.touches[0].clientY;
     const distance = currentYRef.current - startYRef.current;
@@ -44,10 +58,10 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       e.preventDefault();
       setPullDistance(newPullDistance);
     }
-  }, [isPulling]);
+  }, [isPulling, isIOS]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (!isPulling) return;
+    if (!isPulling || isIOS) return;
 
     setIsPulling(false);
 
@@ -64,9 +78,12 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
     } else {
       setPullDistance(0);
     }
-  }, [isPulling, pullDistance, pullDownThreshold, isRefreshing, onRefresh]);
+  }, [isPulling, pullDistance, pullDownThreshold, isRefreshing, onRefresh, isIOS]);
 
   useEffect(() => {
+    // Se è iOS, non aggiungere gli event listener
+    if (isIOS) return;
+    
     const container = containerRef.current;
     if (!container) return;
 
@@ -81,7 +98,12 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       container.removeEventListener('touchend', handleTouchEnd);
       container.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, isIOS]);
+
+  // Se è iOS, renderizza solo i children senza il pull-to-refresh
+  if (isIOS) {
+    return <>{children}</>;
+  }
 
   return (
     <div 
