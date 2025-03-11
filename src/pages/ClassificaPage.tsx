@@ -4,7 +4,6 @@ import Layout from '../components/Layout';
 import { getClassifica } from '../services/supabase';
 import { useSession } from '../context/SessionContext';
 import '../styles/ClassificaPage.css';
-import PullToRefreshWrapper from '../components/PullToRefreshWrapper';
 
 type ClassificaItem = {
   id_giocatore: string;
@@ -49,12 +48,6 @@ const ClassificaPage = () => {
     fetchClassifica();
   }, [fetchClassifica]);
 
-  const handleRefresh = async () => {
-    console.log('Aggiornamento classifica...');
-    await fetchClassifica();
-    return;
-  };
-
   const handleSort = (field: SortField) => {
     if (field === sortField) {
       // Se il campo è già selezionato, inverti la direzione
@@ -90,93 +83,91 @@ const ClassificaPage = () => {
 
   return (
     <Layout>
-      <PullToRefreshWrapper onRefresh={handleRefresh}>
-        <div className="classifica-page">
-          <h1>Classifica Generale</h1>
-          
-          <div className="classifica-info">
-            L'ordine della classifica, a parità di punti, dipende dal numero di risultati esatti presi e successivamente dal numero di esiti corretti.
-          </div>
-          
-          {error && <div className="error">{error}</div>}
-          
-          {loading ? (
-            <div className="loading">Caricamento classifica...</div>
-          ) : classifica.length === 0 ? (
-            <div className="no-classifica">
-              <p>Non ci sono ancora dati disponibili per la classifica.</p>
-            </div>
-          ) : (
-            <div className="classifica-container">
-              <table className="classifica-table">
-                <thead>
-                  <tr>
-                    <th>Pos.</th>
-                    <th>Giocatore</th>
-                    <th 
-                      className="sortable"
-                      onClick={() => handleSort('punti_totali')}
-                    >
-                      Pt {getSortIcon('punti_totali')}
-                    </th>
-                    <th 
-                      className="sortable"
-                      onClick={() => handleSort('risultati_esatti')}
-                    >
-                      R {getSortIcon('risultati_esatti')}
-                    </th>
-                    <th 
-                      className="sortable"
-                      onClick={() => handleSort('esiti_presi')}
-                    >
-                      E {getSortIcon('esiti_presi')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedClassifica.map((item, index) => {
-                    const isCurrentUser = session?.user?.id === item.id_giocatore;
-                    const posizione = index + 1;
-                    
-                    return (
-                      <tr key={item.id_giocatore} className={isCurrentUser ? 'current-user' : ''}>
-                        <td className="posizione">
-                          {posizione === 1 ? (
-                            <span key="gold" className="medal">🥇</span>
-                          ) : posizione === 2 ? (
-                            <span key="silver" className="medal">🥈</span>
-                          ) : posizione === 3 ? (
-                            <span key="bronze" className="medal">🥉</span>
-                          ) : (
-                            posizione
-                          )}
-                        </td>
-                        <td className="giocatore">
-                          <Link to={`/giocatore/${item.id_giocatore}`} className="giocatore-link">
-                            {`${item.nome} ${item.cognome}`}
-                          </Link>
-                          {isCurrentUser && (
-                            <span className="tu-label">(Tu)</span>
-                          )}
-                        </td>
-                        <td className="punteggio">
-                          <strong>{item.punti_totali}</strong>
-                        </td>
-                        <td className="risultati">
-                          {item.risultati_esatti}
-                        </td>
-                        <td className="esiti">
-                          {item.esiti_presi}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      <div className="classifica-page">
+        <h1>Classifica Generale</h1>
+        
+        <div className="classifica-info">
+          L'ordine della classifica, a parità di punti, dipende dal numero di risultati esatti presi e successivamente dal numero di esiti corretti.
         </div>
-      </PullToRefreshWrapper>
+        
+        {error && <div className="error">{error}</div>}
+        
+        {loading ? (
+          <div className="loading">Caricamento classifica...</div>
+        ) : classifica.length === 0 ? (
+          <div className="no-classifica">
+            <p>Non ci sono ancora dati disponibili per la classifica.</p>
+          </div>
+        ) : (
+          <div className="classifica-container">
+            <table className="classifica-table">
+              <thead>
+                <tr>
+                  <th>Pos.</th>
+                  <th>Giocatore</th>
+                  <th 
+                    className="sortable"
+                    onClick={() => handleSort('punti_totali')}
+                  >
+                    Pt {getSortIcon('punti_totali')}
+                  </th>
+                  <th 
+                    className="sortable"
+                    onClick={() => handleSort('risultati_esatti')}
+                  >
+                    R {getSortIcon('risultati_esatti')}
+                  </th>
+                  <th 
+                    className="sortable"
+                    onClick={() => handleSort('esiti_presi')}
+                  >
+                    E {getSortIcon('esiti_presi')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedClassifica.map((item, index) => {
+                  const isCurrentUser = session?.user?.id === item.id_giocatore;
+                  const posizione = index + 1;
+                  
+                  return (
+                    <tr key={item.id_giocatore} className={isCurrentUser ? 'current-user' : ''}>
+                      <td className="posizione">
+                        {posizione === 1 ? (
+                          <span key="gold" className="medal">🥇</span>
+                        ) : posizione === 2 ? (
+                          <span key="silver" className="medal">🥈</span>
+                        ) : posizione === 3 ? (
+                          <span key="bronze" className="medal">🥉</span>
+                        ) : (
+                          posizione
+                        )}
+                      </td>
+                      <td className="giocatore">
+                        <Link to={`/giocatore/${item.id_giocatore}`} className="giocatore-link">
+                          {`${item.nome} ${item.cognome}`}
+                        </Link>
+                        {isCurrentUser && (
+                          <span className="tu-label">(Tu)</span>
+                        )}
+                      </td>
+                      <td className="punteggio">
+                        <strong>{item.punti_totali}</strong>
+                      </td>
+                      <td className="risultati">
+                        {item.risultati_esatti}
+                      </td>
+                      <td className="esiti">
+                        {item.esiti_presi}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </Layout>
   );
 };
