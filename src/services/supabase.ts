@@ -653,9 +653,11 @@ const aggiornaClassifica = async () => {
 // Classifica functions
 export const getClassifica = async () => {
   const { data, error } = await supabase
-    .from('profiles')
-    .select('id, nome, cognome, punteggio')
-    .order('punteggio', { ascending: false });
+    .from('vista_giocatori')
+    .select('id_giocatore, nome, cognome, punti_totali, risultati_esatti, esiti_presi')
+    .order('punti_totali', { ascending: false })
+    .order('risultati_esatti', { ascending: false })
+    .order('esiti_presi', { ascending: false });
   
   return { classifica: data || [], error };
 };

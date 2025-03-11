@@ -1,28 +1,28 @@
 .classifica-page {
-  padding: var(--spacing-md) 0;
+  padding: var(--spacing-md);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .classifica-page h1 {
   color: var(--primary-color);
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
+  margin-bottom: var(--spacing-md);
 }
 
 .no-classifica {
-  text-align: center;
-  padding: var(--spacing-xl);
   background-color: white;
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-md);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .classifica-container {
   background-color: white;
   border-radius: var(--border-radius);
+  padding: var(--spacing-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  max-width: 800px;
-  margin: 0 auto;
+  overflow-x: auto;
 }
 
 .classifica-table {
@@ -32,14 +32,16 @@
 
 .classifica-table th,
 .classifica-table td {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   text-align: left;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .classifica-table th {
-  background-color: var(--primary-color);
-  color: var(--text-light);
   font-weight: 600;
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  white-space: nowrap;
 }
 
 .classifica-table tr:nth-child(even) {
@@ -47,68 +49,235 @@
 }
 
 .classifica-table tr:hover {
-  background-color: rgba(46, 204, 113, 0.1);
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
-.posizione {
-  text-align: center;
-  font-weight: 600;
-  width: 80px;
-}
-
-.medal {
-  font-size: 1.5rem;
-  display: block;
-  margin: 0 auto;
-  line-height: 1;
-}
-
-.giocatore {
-  font-weight: 500;
-}
-
-.giocatore-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  padding: 5px;
-  border-radius: 4px;
+.classifica-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
   transition: background-color 0.2s;
 }
 
-.giocatore-link:hover {
-  background-color: rgba(46, 204, 113, 0.15);
-  text-decoration: underline;
+.classifica-table th.sortable:hover {
+  background-color: rgba(30, 132, 73, 0.1);
 }
 
-.punteggio {
-  font-weight: 600;
-  text-align: center;
+.sort-icon {
+  margin-left: 2px;
+  font-size: 0.8rem;
+  display: inline-block;
   color: var(--primary-color);
 }
 
+.posizione {
+  width: 60px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.medal {
+  font-size: 1.2rem;
+  margin-right: var(--spacing-xs);
+}
+
+.giocatore {
+  min-width: 180px;
+}
+
+.giocatore-link {
+  color: var(--text-color);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-block;
+  transition: color 0.2s;
+}
+
+.giocatore-link:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.punteggio, .risultati, .esiti {
+  width: 80px;
+  text-align: center;
+}
+
 .current-user {
-  background-color: rgba(46, 204, 113, 0.2) !important;
-  font-weight: 700;
+  background-color: rgba(30, 132, 73, 0.1) !important;
+  font-weight: 500;
 }
 
 .tu-label {
-  margin-left: var(--spacing-sm);
-  font-size: var(--font-size-xs);
-  background-color: var(--primary-color);
-  color: var(--text-light);
-  padding: 2px var(--spacing-xs);
-  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  margin-left: var(--spacing-xs);
+  font-weight: 600;
+  display: inline-block;
 }
 
-/* Responsive */
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-md);
+}
+
+.column-title {
+  display: inline-block;
+}
+
+.classifica-info {
+  background-color: rgba(30, 132, 73, 0.1);
+  border-left: 3px solid var(--primary-color);
+  padding: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-size: 0.9rem;
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+}
+
 @media (max-width: 768px) {
   .classifica-table th,
   .classifica-table td {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    font-size: 0.95rem;
+  }
+
+  .posizione {
+    width: 40px;
+  }
+
+  .giocatore {
+    min-width: 120px;
+  }
+
+  .punteggio, .risultati, .esiti {
+    width: 40px;
+  }
+
+  .sort-icon {
+    margin-left: 2px;
+    font-size: 0.7rem;
+  }
+
+  .classifica-info {
+    font-size: 0.85rem;
+    padding: var(--spacing-xs);
+  }
+}
+
+@media (max-width: 576px) {
+  .classifica-table {
+    font-size: 0.85rem;
+  }
+
+  .classifica-table th {
+    font-size: 0.8rem;
+    padding: 4px 2px;
+  }
+
+  .posizione {
+    width: 30px;
+  }
+
+  .medal {
+    font-size: 1rem;
+  }
+
+  .giocatore {
+    min-width: 100px;
+  }
+
+  .punteggio, .risultati, .esiti {
+    width: 30px;
+  }
+
+  .classifica-info {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .classifica-table {
+    font-size: 0.75rem;
+  }
+
+  .classifica-table th {
+    font-size: 0.7rem;
+    padding: 4px 1px;
+  }
+
+  .punteggio, .risultati, .esiti {
+    width: 25px;
+  }
+  
+  .sort-icon {
+    font-size: 0.6rem;
+  }
+  
+  .giocatore {
+    min-width: 90px;
+  }
+}
+
+@media (max-width: 380px) {
+  .classifica-table {
+    font-size: 0.7rem;
+  }
+
+  .classifica-table th {
+    font-size: 0.65rem;
+    padding: 4px 0;
+  }
+
+  .punteggio, .risultati, .esiti {
+    width: 22px;
+  }
+  
+  .giocatore {
+    min-width: 80px;
   }
   
   .posizione {
-    width: 50px;
+    width: 25px;
+  }
+}
+
+@media (max-width: 350px) {
+  .classifica-table {
+    font-size: 0.65rem;
+  }
+
+  .classifica-table th {
+    font-size: 0.6rem;
+  }
+
+  .punteggio, .risultati, .esiti {
+    width: 20px;
+  }
+  
+  .giocatore {
+    min-width: 70px;
+  }
+  
+  .posizione {
+    width: 20px;
+  }
+  
+  .medal {
+    font-size: 0.9rem;
+  }
+  
+  .tu-label {
+    font-size: 0.6rem;
+  }
+}
+
+@media (display-mode: standalone) {
+  .classifica-page {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 } 

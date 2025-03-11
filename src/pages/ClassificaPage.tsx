@@ -1,109 +1,186 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { getClassifica } from '../services/supabase';
 import { useSession } from '../context/SessionContext';
 import '../styles/ClassificaPage.css';
+import PullToRefresh from '../components/PullToRefresh';
 
 type ClassificaItem = {
-  id: string;
+  id_giocatore: string;
   nome: string;
   cognome: string;
-  punteggio: number;
+  punti_totali: number;
+  risultati_esatti: number;
+  esiti_presi: number;
 };
+
+type SortField = 'punti_totali' | 'risultati_esatti' | 'esiti_presi';
+type SortDirection = 'asc' | 'desc';
 
 const ClassificaPage = () => {
   const { session } = useSession();
   const [classifica, setClassifica] = useState<ClassificaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>('punti_totali');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const fetchClassifica = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { classifica: classificaData, error: classificaError } = await getClassifica();
+      
+      if (classificaError) {
+        setError(classificaError.message);
+        return;
+      }
+      
+      setClassifica(classificaData as ClassificaItem[]);
+    } catch (err: any) {
+      console.error('Errore durante il recupero della classifica:', err);
+      setError(err.message || 'Errore durante il recupero della classifica. Riprova più tardi.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchClassifica = async () => {
-      try {
-        setLoading(true);
-        const { classifica: classificaData, error: classificaError } = await getClassifica();
-        
-        if (classificaError) {
-          throw classificaError;
-        }
-        
-        setClassifica(classificaData as ClassificaItem[]);
-        setLoading(false);
-      } catch (err: any) {
-        console.error('Errore durante il recupero della classifica:', err);
-        setError(err.message || 'Errore durante il recupero della classifica. Riprova più tardi.');
-        setLoading(false);
-      }
-    };
-    
     fetchClassifica();
-  }, []);
+  }, [fetchClassifica]);
+
+  const handleRefresh = async () => {
+    console.log('Aggiornamento classifica...');
+    await fetchClassifica();
+    return;
+  };
+
+  const handleSort = (field: SortField) => {
+    if (field === sortField) {
+      // Se il campo è già selezionato, inverti la direzione
+      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+    } else {
+      // Altrimenti, imposta il nuovo campo e la direzione predefinita (discendente)
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return null;
+    
+    return (
+      <span className="sort-icon">
+        {sortDirection === 'desc' ? '▼' : '▲'}
+      </span>
+    );
+  };
+
+  // Ordina la classifica in base al campo e alla direzione selezionati
+  const sortedClassifica = [...classifica].sort((a, b) => {
+    const valueA = a[sortField];
+    const valueB = b[sortField];
+    
+    if (sortDirection === 'desc') {
+      return valueB - valueA;
+    } else {
+      return valueA - valueB;
+    }
+  });
 
   return (
     <Layout>
-      <div className="classifica-page">
-        <h1>Classifica Generale</h1>
-
-        <section className="regole-intro">
-          <p>
-            Qui puoi vedere la classifica generale dei giocatori. Una volta che i risultati delle partite sono stati inseriti, potrai vedere la tua posizione nella classifica e confrontarti con gli altri giocatori cliccando sul loro nome!
-          </p>
-        </section>
-        
-        {error && <div className="error">{error}</div>}
-        
-        {loading ? (
-          <div className="loading">Caricamento classifica...</div>
-        ) : classifica.length === 0 ? (
-          <div className="no-classifica">Nessun dato disponibile</div>
-        ) : (
-          <div className="classifica-container">
-            <table className="classifica-table">
-              <thead>
-                <tr>
-                  <th>Pos.</th>
-                  <th>Giocatore</th>
-                  <th>Punti</th>
-                </tr>
-              </thead>
-              <tbody>
-                {classifica.map((item, index) => {
-                  const isCurrentUser = session?.user?.id === item.id;
-                  const posizione = index + 1;
-                  
-                  return (
-                    <tr 
-                      key={item.id} 
-                      className={isCurrentUser ? 'current-user' : ''}
+      <PullToRefresh 
+        onRefresh={handleRefresh}
+        pullDownThreshold={70}
+        backgroundColor="transparent"
+      >
+        <div className="classifica-page">
+          <h1>Classifica Generale</h1>
+          
+          <div className="classifica-info">
+            L'ordine della classifica, a parità di punti, dipende dal numero di risultati esatti presi e successivamente dal numero di esiti corretti.
+          </div>
+          
+          {error && <div className="error">{error}</div>}
+          
+          {loading ? (
+            <div className="loading">Caricamento classifica...</div>
+          ) : classifica.length === 0 ? (
+            <div className="no-classifica">
+              <p>Non ci sono ancora dati disponibili per la classifica.</p>
+            </div>
+          ) : (
+            <div className="classifica-container">
+              <table className="classifica-table">
+                <thead>
+                  <tr>
+                    <th>Pos.</th>
+                    <th>Giocatore</th>
+                    <th 
+                      className="sortable"
+                      onClick={() => handleSort('punti_totali')}
                     >
-                      <td className="posizione">
-                        {posizione <= 3 ? (
-                          <span className="medal">
-                            {posizione === 1 ? '🥇' : 
-                             posizione === 2 ? '🥈' : '🥉'}
-                          </span>
-                        ) : (
-                          posizione
-                        )}
-                      </td>
-                      <td className="giocatore">
-                        <Link to={`/giocatore/${item.id}`} className="giocatore-link">
-                          {`${item.nome} ${item.cognome}`}
+                      Pt {getSortIcon('punti_totali')}
+                    </th>
+                    <th 
+                      className="sortable"
+                      onClick={() => handleSort('risultati_esatti')}
+                    >
+                      R {getSortIcon('risultati_esatti')}
+                    </th>
+                    <th 
+                      className="sortable"
+                      onClick={() => handleSort('esiti_presi')}
+                    >
+                      E {getSortIcon('esiti_presi')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedClassifica.map((item, index) => {
+                    const isCurrentUser = session?.user?.id === item.id_giocatore;
+                    const posizione = index + 1;
+                    
+                    return (
+                      <tr key={item.id_giocatore} className={isCurrentUser ? 'current-user' : ''}>
+                        <td className="posizione">
+                          {posizione === 1 ? (
+                            <span className="medal">🥇</span>
+                          ) : posizione === 2 ? (
+                            <span className="medal">🥈</span>
+                          ) : posizione === 3 ? (
+                            <span className="medal">🥉</span>
+                          ) : (
+                            posizione
+                          )}
+                        </td>
+                        <td className="giocatore">
+                          <Link to={`/giocatore/${item.id_giocatore}`} className="giocatore-link">
+                            {`${item.nome} ${item.cognome}`}
+                          </Link>
                           {isCurrentUser && (
                             <span className="tu-label">(Tu)</span>
                           )}
-                        </Link>
-                      </td>
-                      <td className="punteggio">{item.punteggio}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        </td>
+                        <td className="punteggio">
+                          <strong>{item.punti_totali}</strong>
+                        </td>
+                        <td className="risultati">
+                          {item.risultati_esatti}
+                        </td>
+                        <td className="esiti">
+                          {item.esiti_presi}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </PullToRefresh>
     </Layout>
   );
 };
