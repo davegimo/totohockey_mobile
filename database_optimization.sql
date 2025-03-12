@@ -88,5 +88,5 @@ LEFT JOIN
   ON p.id = correct_outcomes.user_id
 ORDER BY 
   p.punteggio DESC,
-  exact_results.count DESC,
-  correct_outcomes.count DESC; 
+  COALESCE(exact_results.count, 0) DESC,
+  COALESCE(correct_outcomes.count, 0) DESC; 
