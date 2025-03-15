@@ -649,7 +649,7 @@ const aggiornaClassificaMassiva = async () => {
 // Classifica functions
 export const getClassifica = async () => {
   const { data, error } = await supabase
-    .from('vista_classifica')
+    .from('vista_giocatori')
     .select('id_giocatore, nome, cognome, punti_totali, risultati_esatti, esiti_presi')
     .order('punti_totali', { ascending: false })
     .order('risultati_esatti', { ascending: false })
