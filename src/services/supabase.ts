@@ -74,6 +74,8 @@ export type ProfileData = {
   email: string;
   punteggio: number;
   ruolo?: string;
+  risultati_esatti?: number;
+  esiti_presi?: number;
 };
 
 // Authentication functions
@@ -399,6 +401,38 @@ export const getUserById = async (userId: string) => {
     return { user: data as ProfileData, error: null };
   } catch (error) {
     console.error('Errore durante il recupero del profilo utente:', error);
+    return { user: null, error };
+  }
+};
+
+// Nuova funzione che recupera i dati del giocatore dalla vista vista_giocatori
+export const getGiocatoreById = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('vista_giocatori')
+      .select('id_giocatore, nome, cognome, email, punti_totali, risultati_esatti, esiti_presi')
+      .eq('id_giocatore', userId)
+      .single();
+    
+    if (error) {
+      console.error('Errore durante il recupero del profilo giocatore:', error);
+      return { user: null, error };
+    }
+    
+    // Convertiamo il formato per mantenere la compatibilità con ProfileData
+    const user: ProfileData = {
+      id: data.id_giocatore,
+      nome: data.nome,
+      cognome: data.cognome,
+      email: data.email,
+      punteggio: data.punti_totali,
+      risultati_esatti: data.risultati_esatti,
+      esiti_presi: data.esiti_presi
+    };
+    
+    return { user, error: null };
+  } catch (error) {
+    console.error('Errore durante il recupero del profilo giocatore:', error);
     return { user: null, error };
   }
 };

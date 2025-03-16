@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getPronosticiWithDetails, getUserById } from '../services/supabase';
+import { getPronosticiWithDetails, getGiocatoreById } from '../services/supabase';
 import { ProfileData } from '../services/supabase';
 import '../styles/GiocatorePage.css';
 
@@ -59,8 +59,8 @@ const GiocatorePage = () => {
       try {
         setLoading(true);
         
-        // Recupera i dati dell'utente
-        const { user, error: userError } = await getUserById(id);
+        // Recupera i dati dell'utente dalla vista vista_giocatori
+        const { user, error: userError } = await getGiocatoreById(id);
         
         if (userError) {
           throw new Error('Errore durante il recupero dei dati dell\'utente');
@@ -146,9 +146,19 @@ const GiocatorePage = () => {
           <>
             <div className="giocatore-header">
               <h1>{user?.nome} {user?.cognome}</h1>
-              <div className="giocatore-punteggio">
-                <span className="punteggio-label">Punteggio totale:</span>
-                <span className="punteggio-value">{user?.punteggio}</span>
+              <div className="giocatore-stats">
+                <div className="giocatore-punteggio">
+                  <span className="punteggio-label">Punti:</span>
+                  <span className="punteggio-value">{user?.punteggio}</span>
+                </div>
+                <div className="giocatore-risultati">
+                  <span className="risultati-label">Risultati:</span>
+                  <span className="risultati-value">{user?.risultati_esatti || 0}</span>
+                </div>
+                <div className="giocatore-esiti">
+                  <span className="esiti-label">Esiti:</span>
+                  <span className="esiti-value">{user?.esiti_presi || 0}</span>
+                </div>
               </div>
             </div>
             

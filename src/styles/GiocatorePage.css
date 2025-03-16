@@ -23,22 +23,41 @@
   font-size: 1.5rem;
 }
 
-.giocatore-punteggio {
+.giocatore-stats {
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-sm);
+}
+
+.giocatore-punteggio, .giocatore-risultati, .giocatore-esiti {
   display: flex;
   align-items: center;
-  background-color: var(--primary-color);
-  color: white;
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius);
 }
 
-.punteggio-label {
+.giocatore-punteggio {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.giocatore-risultati {
+  background-color: #43a047;
+  color: white;
+}
+
+.giocatore-esiti {
+  background-color: #1e88e5;
+  color: white;
+}
+
+.punteggio-label, .risultati-label, .esiti-label {
   margin-right: var(--spacing-xs);
   font-weight: 500;
   font-size: 0.9rem;
 }
 
-.punteggio-value {
+.punteggio-value, .risultati-value, .esiti-value {
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -314,6 +333,24 @@
     gap: var(--spacing-sm);
   }
   
+  .giocatore-stats {
+    width: auto;
+    justify-content: flex-start;
+    gap: var(--spacing-xs);
+  }
+  
+  .giocatore-punteggio, .giocatore-risultati, .giocatore-esiti {
+    padding: var(--spacing-xs) var(--spacing-xs);
+  }
+  
+  .punteggio-label, .risultati-label, .esiti-label {
+    font-size: 0.8rem;
+  }
+  
+  .punteggio-value, .risultati-value, .esiti-value {
+    font-size: 1rem;
+  }
+  
   .pronostico-card {
     min-height: auto;
     padding: var(--spacing-xs);
@@ -371,6 +408,22 @@
   
   .pronostico-card {
     padding: var(--spacing-2xs);
+  }
+  
+  .giocatore-stats {
+    gap: 4px;
+  }
+  
+  .giocatore-punteggio, .giocatore-risultati, .giocatore-esiti {
+    padding: 4px 6px;
+  }
+  
+  .punteggio-label, .risultati-label, .esiti-label {
+    font-size: 0.7rem;
+  }
+  
+  .punteggio-value, .risultati-value, .esiti-value {
+    font-size: 0.9rem;
   }
 }
 
