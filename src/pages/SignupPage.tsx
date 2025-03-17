@@ -9,6 +9,7 @@ const SignupPage = () => {
   const [cognome, setCognome] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -16,13 +17,18 @@ const SignupPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!nome || !cognome || !email || !password) {
+    if (!nome || !cognome || !email || !password || !confirmPassword) {
       setError('Compila tutti i campi');
       return;
     }
     
     if (password.length < 6) {
       setError('La password deve contenere almeno 6 caratteri');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Le password non coincidono');
       return;
     }
     
@@ -119,6 +125,18 @@ const SignupPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Scegli una password"
+                disabled={loading}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Conferma Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Ripeti la password"
                 disabled={loading}
               />
             </div>
