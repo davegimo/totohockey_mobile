@@ -1,30 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
 import '../styles/AuthPages.css';
 
-const LoginPage = () => {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    // Controlla se c'è un messaggio nella location state (ad esempio, dopo la registrazione)
-    if (location.state && 'message' in location.state) {
-      setSuccessMessage(location.state.message as string);
-    }
-  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      setError('Inserisci email e password');
+    if (!email) {
+      setError('Inserisci la tua email');
       return;
     }
     
@@ -32,22 +22,23 @@ const LoginPage = () => {
       setLoading(true);
       setError(null);
       
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      // Invia email per il reset della password
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       
       if (error) {
         throw error;
       }
       
-      // Login riuscito, reindirizza alla dashboard
-      navigate('/dashboard');
+      // Mostra messaggio di successo
+      setSuccessMessage('Ti abbiamo inviato un\'email con le istruzioni per reimpostare la password.');
+      
+      // Pulisci il campo email
+      setEmail('');
     } catch (err: any) {
-      console.error('Errore durante il login:', err.message);
-      setError(err.message === 'Invalid login credentials' 
-        ? 'Credenziali non valide. Controlla email e password.' 
-        : 'Si è verificato un errore durante il login. Riprova più tardi.');
+      console.error('Errore durante la richiesta di reset della password:', err.message);
+      setError('Si è verificato un errore durante l\'invio dell\'email. Verifica che l\'indirizzo sia corretto e riprova.');
     } finally {
       setLoading(false);
     }
@@ -57,7 +48,8 @@ const LoginPage = () => {
     <Layout>
       <div className="auth-page">
         <div className="auth-container">
-          <h1>Accedi</h1>
+          <h1>Password dimenticata?</h1>
+          <p className="auth-subtitle">Inserisci la tua email e ti invieremo un link per reimpostare la password.</p>
           
           {successMessage && (
             <div className="success-message">
@@ -84,33 +76,18 @@ const LoginPage = () => {
               />
             </div>
             
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="La tua password"
-                disabled={loading}
-              />
-              <div className="forgot-password">
-                <Link to="/forgot-password">Password dimenticata?</Link>
-              </div>
-            </div>
-            
             <button 
               type="submit" 
               className="auth-button"
               disabled={loading}
             >
-              {loading ? 'Accesso in corso...' : 'Accedi'}
+              {loading ? 'Invio in corso...' : 'Invia link di reset'}
             </button>
           </form>
           
           <div className="auth-links">
             <p>
-              Non hai un account? <Link to="/signup">Registrati</Link>
+              <Link to="/login">Torna al login</Link>
             </p>
           </div>
         </div>
@@ -119,4 +96,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage; 
+export default ForgotPasswordPage; 

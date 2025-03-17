@@ -116,6 +116,21 @@
   font-size: 0.9rem;
 }
 
+.forgot-password {
+  text-align: right;
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.forgot-password a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 768px) {
   .auth-container {
     padding: 1.5rem;
