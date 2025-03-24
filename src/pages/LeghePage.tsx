@@ -62,6 +62,10 @@ const LeghePage = () => {
         // Trova la posizione dell'utente corrente nella classifica
         const posizioneUtente = giocatori.findIndex(g => g.id_giocatore === userData.user.id) + 1;
         
+        // Per la demo, simula una posizione utente anche per le leghe private
+        const posizioneUtenteMock1 = 3;
+        const posizioneUtenteMock2 = 2;
+        
         // Crea la lega pubblica con i dati richiesti
         const legaPubblica: Lega = {
           id: 'public',
@@ -69,7 +73,8 @@ const LeghePage = () => {
           descrizione: 'Lega pubblica per vincere fantastici premi!',
           is_pubblica: true,
           num_partecipanti: giocatori.length,
-          posizione_utente: posizioneUtente || 0
+          posizione_utente: posizioneUtente || 0,
+          creata_da: 'admin' // Assumiamo che la lega pubblica sia creata dall'admin
         };
         
         // Simulo alcune leghe private
@@ -81,7 +86,8 @@ const LeghePage = () => {
             is_pubblica: false,
             data_creazione: '2023-02-15T00:00:00',
             creata_da: 'Mario Rossi',
-            num_partecipanti: 8
+            num_partecipanti: 8,
+            posizione_utente: posizioneUtenteMock1
           },
           {
             id: 'colleghi',
@@ -90,7 +96,8 @@ const LeghePage = () => {
             is_pubblica: false,
             data_creazione: '2023-03-10T00:00:00',
             creata_da: userData.user.id,
-            num_partecipanti: 5
+            num_partecipanti: 5,
+            posizione_utente: posizioneUtenteMock2
           }
         ];
         
@@ -112,6 +119,18 @@ const LeghePage = () => {
     // Funzionalità da implementare successivamente
     console.log('Creazione lega: funzionalità da implementare');
   };
+
+  // Verifica se l'utente è admin della lega
+  const isLegaAdmin = (lega: Lega) => {
+    return lega.creata_da === userId;
+  };
+
+  // Icona corona per admin
+  const AdminCrown = () => (
+    <span className="admin-crown" title="Sei l'amministratore di questa lega">
+      👑
+    </span>
+  );
 
   return (
     <Layout>
@@ -146,7 +165,9 @@ const LeghePage = () => {
                   className={`lega-card ${lega.is_pubblica ? 'lega-pubblica' : 'lega-privata'}`}
                 >
                   <div className="lega-header">
-                    <h2 className="lega-nome">{lega.nome}</h2>
+                    <h2 className="lega-nome">
+                      {lega.nome} {isLegaAdmin(lega) && !lega.is_pubblica && <AdminCrown />}
+                    </h2>
                     {lega.is_pubblica && <span className="lega-badge pubblica">Pubblica</span>}
                     {!lega.is_pubblica && <span className="lega-badge privata">Privata</span>}
                   </div>
@@ -156,31 +177,17 @@ const LeghePage = () => {
                   )}
                   
                   <div className="lega-info">
-                    {lega.is_pubblica && lega.posizione_utente ? (
+                    {lega.posizione_utente !== undefined && (
                       <div className="lega-posizione">
                         <span className="info-label">La tua posizione:</span> 
                         {lega.posizione_utente === 0 ? 'Non classificato' : `${lega.posizione_utente}° posto`}
                       </div>
-                    ) : (
-                      lega.data_creazione && (
-                        <div className="lega-data">
-                          <span className="info-label">Creata il:</span> 
-                          {new Date(lega.data_creazione).toLocaleDateString('it-IT')}
-                        </div>
-                      )
                     )}
                     
                     {lega.num_partecipanti !== undefined && (
                       <div className="lega-partecipanti">
                         <span className="info-label">Partecipanti:</span> 
                         {lega.num_partecipanti}
-                      </div>
-                    )}
-                    
-                    {!lega.is_pubblica && lega.creata_da && (
-                      <div className="lega-creatore">
-                        <span className="info-label">Creata da:</span> 
-                        {lega.creata_da === userId ? 'Te' : lega.creata_da}
                       </div>
                     )}
                   </div>
@@ -190,7 +197,7 @@ const LeghePage = () => {
                       Visualizza Classifica
                     </button>
                     
-                    {!lega.is_pubblica && (
+                    {!lega.is_pubblica && isLegaAdmin(lega) && (
                       <button className="invita-button">
                         Invita Giocatori
                       </button>
