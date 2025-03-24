@@ -14,6 +14,7 @@ import AdminPage from './pages/AdminPage'
 import RegolePage from './pages/RegolePage'
 import GiocatorePage from './pages/GiocatorePage'
 import LeghePage from './pages/LeghePage'
+import CreaLegaPage from './pages/CreaLegaPage'
 import AuthProtectedRoute from './router/AuthProtectedRoute'
 import Providers from './Providers'
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/classifica" element={<ClassificaPage />} />
             <Route path="/leghe" element={<LeghePage />} />
+            <Route path="/leghe/crea" element={<CreaLegaPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/regole" element={<RegolePage />} />

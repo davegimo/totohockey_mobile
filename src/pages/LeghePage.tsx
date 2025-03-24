@@ -116,8 +116,8 @@ const LeghePage = () => {
   }, [navigate]);
   
   const handleCreaLega = () => {
-    // Funzionalità da implementare successivamente
-    console.log('Creazione lega: funzionalità da implementare');
+    // Naviga alla pagina di creazione della lega
+    navigate('/leghe/crea');
   };
 
   // Gestisce il click sul bottone Visualizza Classifica
