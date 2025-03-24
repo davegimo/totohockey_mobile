@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
+import { getClassifica } from '../services/supabase';
 import '../styles/LeghePage.css';
 
 // Tipo per le leghe
@@ -10,9 +11,20 @@ type Lega = {
   nome: string;
   descrizione?: string;
   is_pubblica: boolean;
-  data_creazione: string;
+  data_creazione?: string;
   creata_da?: string;
   num_partecipanti?: number;
+  posizione_utente?: number;
+};
+
+// Tipo per gli elementi della classifica
+type ClassificaItem = {
+  id_giocatore: string;
+  nome: string;
+  cognome: string;
+  punti_totali: number;
+  risultati_esatti: number;
+  esiti_presi: number;
 };
 
 const LeghePage = () => {
@@ -37,16 +49,27 @@ const LeghePage = () => {
         
         setUserId(userData.user.id);
         
-        // Per ora simulo che ci sia una lega pubblica e alcune leghe private
-        // In futuro questo sarà sostituito con una vera query al database
+        // Ottieni i dati dalla vista_giocatori per la lega pubblica
+        const { classifica: classificaData, error: classificaError } = await getClassifica();
         
+        if (classificaError) {
+          console.error('Errore nel recupero della classifica:', classificaError);
+          throw classificaError;
+        }
+        
+        const giocatori = classificaData as ClassificaItem[];
+        
+        // Trova la posizione dell'utente corrente nella classifica
+        const posizioneUtente = giocatori.findIndex(g => g.id_giocatore === userData.user.id) + 1;
+        
+        // Crea la lega pubblica con i dati richiesti
         const legaPubblica: Lega = {
           id: 'public',
-          nome: 'Lega Pubblica Totohockey',
-          descrizione: 'La lega principale che include tutti i giocatori',
+          nome: 'Totocontest 2025',
+          descrizione: 'Lega pubblica per vincere fantastici premi!',
           is_pubblica: true,
-          data_creazione: '2023-01-01T00:00:00',
-          num_partecipanti: 50 // Numero simulato
+          num_partecipanti: giocatori.length,
+          posizione_utente: posizioneUtente || 0
         };
         
         // Simulo alcune leghe private
@@ -133,10 +156,19 @@ const LeghePage = () => {
                   )}
                   
                   <div className="lega-info">
-                    <div className="lega-data">
-                      <span className="info-label">Creata il:</span> 
-                      {new Date(lega.data_creazione).toLocaleDateString('it-IT')}
-                    </div>
+                    {lega.is_pubblica && lega.posizione_utente ? (
+                      <div className="lega-posizione">
+                        <span className="info-label">La tua posizione:</span> 
+                        {lega.posizione_utente === 0 ? 'Non classificato' : `${lega.posizione_utente}° posto`}
+                      </div>
+                    ) : (
+                      lega.data_creazione && (
+                        <div className="lega-data">
+                          <span className="info-label">Creata il:</span> 
+                          {new Date(lega.data_creazione).toLocaleDateString('it-IT')}
+                        </div>
+                      )
+                    )}
                     
                     {lega.num_partecipanti !== undefined && (
                       <div className="lega-partecipanti">
