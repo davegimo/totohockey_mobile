@@ -120,6 +120,19 @@ const LeghePage = () => {
     console.log('Creazione lega: funzionalità da implementare');
   };
 
+  // Gestisce il click sul bottone Visualizza Classifica
+  const handleVisualizzaClassifica = (lega: Lega) => {
+    if (lega.is_pubblica) {
+      // Per la lega pubblica, naviga alla classifica generale
+      navigate('/classifica');
+    } else {
+      // Per le leghe private, per ora mostra solo un messaggio
+      // In futuro si potrà implementare una visualizzazione specifica
+      console.log(`Visualizzazione classifica per la lega privata: ${lega.id}`);
+      alert('Funzionalità in fase di sviluppo per le leghe private');
+    }
+  };
+
   // Verifica se l'utente è admin della lega
   const isLegaAdmin = (lega: Lega) => {
     return lega.creata_da === userId;
@@ -193,8 +206,11 @@ const LeghePage = () => {
                   </div>
                   
                   <div className="lega-actions">
-                    <button className="visualizza-lega-button">
-                      Visualizza Classifica
+                    <button 
+                      className="visualizza-lega-button"
+                      onClick={() => handleVisualizzaClassifica(lega)}
+                    >
+                      {lega.is_pubblica ? 'Visualizza Classifica' : 'Visualizza'}
                     </button>
                     
                     {!lega.is_pubblica && isLegaAdmin(lega) && (
