@@ -1,0 +1,198 @@
+.leghe-page {
+  padding: 20px 0;
+}
+
+.pagina-titolo {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+}
+
+.crea-lega-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.crea-lega-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.crea-lega-button:hover {
+  background-color: #2980b9;
+}
+
+.loading {
+  text-align: center;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #7f8c8d;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.no-leghe {
+  text-align: center;
+  margin: 2rem 0;
+  color: #7f8c8d;
+  font-style: italic;
+}
+
+.leghe-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.lega-card {
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lega-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.lega-pubblica {
+  background-color: #f0f9ff;
+  border: 2px solid #3498db;
+}
+
+.lega-privata {
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+
+.lega-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.lega-nome {
+  font-size: 1.4rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.lega-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.lega-badge.pubblica {
+  background-color: #3498db;
+  color: white;
+}
+
+.lega-badge.privata {
+  background-color: #f39c12;
+  color: white;
+}
+
+.lega-descrizione {
+  color: #636e72;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.lega-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #7f8c8d;
+  margin-right: 0.25rem;
+}
+
+.lega-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.visualizza-lega-button, .invita-button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+}
+
+.visualizza-lega-button {
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+}
+
+.visualizza-lega-button:hover {
+  background-color: #27ae60;
+}
+
+.invita-button {
+  background-color: #fff;
+  color: #3498db;
+  border: 1px solid #3498db;
+}
+
+.invita-button:hover {
+  background-color: #ecf0f1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .leghe-lista {
+    grid-template-columns: 1fr;
+  }
+  
+  .lega-card {
+    width: 100%;
+  }
+  
+  .lega-info {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .lega-info {
+    grid-template-columns: 1fr;
+  }
+  
+  .lega-actions {
+    flex-direction: column;
+  }
+} 

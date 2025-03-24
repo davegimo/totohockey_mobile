@@ -44,6 +44,7 @@ const Header = ({ isLoggedIn, userName, isAdmin = false }: HeaderProps) => {
     <>
       <Link to="/dashboard" className="nav-link">Partite</Link>
       <Link to="/classifica" className="nav-link">Classifica</Link>
+      <Link to="/leghe" className="nav-link">Leghe</Link>
       <Link to="/regole" className="nav-link">Regole</Link>
       {isAdmin && (
         <Link to="/admin" className="nav-link admin-link">Admin</Link>
@@ -117,6 +118,9 @@ const Header = ({ isLoggedIn, userName, isAdmin = false }: HeaderProps) => {
                     </Link>
                     <Link to="/classifica" className="dropdown-item" onClick={() => setMobileMenuOpen(false)}>
                       Classifica
+                    </Link>
+                    <Link to="/leghe" className="dropdown-item" onClick={() => setMobileMenuOpen(false)}>
+                      Leghe
                     </Link>
                     <Link to="/regole" className="dropdown-item" onClick={() => setMobileMenuOpen(false)}>
                       Regole
