@@ -126,4 +126,20 @@
     width: 100%;
     min-width: unset;
   }
+}
+
+/* Stili per il contenuto del modal di successo */
+.success-modal-content {
+  text-align: center;
+}
+
+.success-modal-content p {
+  margin-bottom: 15px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.success-modal-content strong {
+  color: #0074E4;
+  font-weight: 600;
 } 

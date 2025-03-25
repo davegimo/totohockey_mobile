@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import CreaLegaModal from '../components/CreaLegaModal';
 import { creaLega } from '../services/supabase';
 import '../styles/CreaLegaPage.css';
 
@@ -12,6 +13,8 @@ const CreaLegaPage = () => {
   const [anteprima, setAnteprima] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [legaCreata, setLegaCreata] = useState<{nome: string, id: string} | null>(null);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files ? e.target.files[0] : null;
@@ -74,15 +77,23 @@ const CreaLegaPage = () => {
         throw new Error('Errore durante la creazione della lega');
       }
       
-      // Torniamo alla pagina delle leghe
-      alert('Lega creata con successo!');
-      navigate('/leghe');
+      // Salva le informazioni della lega creata e mostra il modal di successo
+      setLegaCreata({
+        nome: lega.nome,
+        id: lega.id
+      });
+      setShowSuccessModal(true);
+      
     } catch (err: any) {
       console.error('Errore durante la creazione della lega:', err);
       setError(err.message || 'Si è verificato un errore durante la creazione della lega');
-    } finally {
       setLoading(false);
     }
+  };
+  
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    navigate('/leghe');
   };
 
   return (
@@ -152,6 +163,23 @@ const CreaLegaPage = () => {
             </button>
           </div>
         </form>
+        
+        {/* Modal di successo */}
+        <CreaLegaModal 
+          isOpen={showSuccessModal}
+          onClose={handleSuccessModalClose}
+          title="Lega Creata con Successo"
+          confirmText="OK"
+        >
+          <div className="success-modal-content">
+            <p>
+              Congratulazioni! La tua lega <strong>{legaCreata?.nome}</strong> è stata creata con successo.
+            </p>
+            <p>
+              Ora puoi invitare i tuoi amici a partecipare e iniziare a competere.
+            </p>
+          </div>
+        </CreaLegaModal>
       </div>
     </Layout>
   );
