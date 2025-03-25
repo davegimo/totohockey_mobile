@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { creaLega } from '../services/supabase';
 import '../styles/CreaLegaPage.css';
 
 const CreaLegaPage = () => {
@@ -10,6 +11,7 @@ const CreaLegaPage = () => {
   const [file, setFile] = useState<File | null>(null);
   const [anteprima, setAnteprima] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files ? e.target.files[0] : null;
@@ -44,7 +46,7 @@ const CreaLegaPage = () => {
     }
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!nome) {
@@ -52,14 +54,35 @@ const CreaLegaPage = () => {
       return;
     }
     
-    // Per ora, simuliamo il successo della creazione della lega
-    console.log('Dati del form:', { nome, descrizione, file });
-    
-    // In una implementazione reale, qui invieremmo i dati al backend
-    
-    // Torniamo alla pagina delle leghe
-    alert('Lega creata con successo!');
-    navigate('/leghe');
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Crea la lega utilizzando il servizio Supabase
+      const { lega, error: legaError } = await creaLega(
+        nome,
+        descrizione,
+        file || undefined,
+        false // per ora creiamo solo leghe private
+      );
+      
+      if (legaError) {
+        throw legaError;
+      }
+      
+      if (!lega) {
+        throw new Error('Errore durante la creazione della lega');
+      }
+      
+      // Torniamo alla pagina delle leghe
+      alert('Lega creata con successo!');
+      navigate('/leghe');
+    } catch (err: any) {
+      console.error('Errore durante la creazione della lega:', err);
+      setError(err.message || 'Si è verificato un errore durante la creazione della lega');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,6 +106,7 @@ const CreaLegaPage = () => {
               onChange={(e) => setNome(e.target.value)}
               placeholder="Inserisci il nome della lega"
               required
+              disabled={loading}
             />
           </div>
           
@@ -94,6 +118,7 @@ const CreaLegaPage = () => {
               onChange={(e) => setDescrizione(e.target.value)}
               placeholder="Descrivi brevemente la tua lega"
               rows={4}
+              disabled={loading}
             />
           </div>
           
@@ -104,6 +129,7 @@ const CreaLegaPage = () => {
               id="foto"
               accept="image/*"
               onChange={handleFileChange}
+              disabled={loading}
             />
             <div className="file-info">
               Formati accettati: JPG, PNG, GIF. Dimensione massima: 5MB
@@ -117,8 +143,12 @@ const CreaLegaPage = () => {
           </div>
           
           <div className="form-actions">
-            <button type="submit" className="submit-button">
-              Crea Lega
+            <button 
+              type="submit" 
+              className="submit-button"
+              disabled={loading}
+            >
+              {loading ? 'Creazione in corso...' : 'Crea Lega'}
             </button>
           </div>
         </form>

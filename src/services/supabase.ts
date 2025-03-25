@@ -78,6 +78,48 @@ export type ProfileData = {
   esiti_presi?: number;
 };
 
+// Tipi per le leghe
+export type Lega = {
+  id: string;
+  nome: string;
+  descrizione?: string;
+  is_pubblica: boolean;
+  creato_da: string;
+  logo_url?: string;
+  data_creazione: string;
+  ultima_modifica: string;
+  codice_invito?: string;
+  attiva: boolean;
+};
+
+export type GiocatoreLega = {
+  id: string;
+  giocatore_id: string;
+  lega_id: string;
+  punti_totali: number;
+  risultati_esatti: number;
+  esiti_presi: number;
+  data_ingresso: string;
+  is_admin: boolean;
+  ultima_modifica: string;
+};
+
+export type ClassificaLega = {
+  id: string;
+  giocatore_id: string;
+  lega_id: string;
+  nome_lega: string;
+  nome: string;
+  cognome: string;
+  punti_totali: number;
+  risultati_esatti: number;
+  esiti_presi: number;
+  is_admin: boolean;
+  data_ingresso: string;
+  is_pubblica: boolean;
+  posizione: number;
+};
+
 // Authentication functions
 export const signUp = async (email: string, password: string, nome: string, cognome: string) => {
   const { data, error } = await supabase.auth.signUp({
@@ -729,6 +771,286 @@ export const ricalcolaPunteggiUtenti = async () => {
   } catch (error) {
     console.error('Errore durante il ricalcolo dei punteggi:', error);
     return { success: false, error };
+  }
+};
+
+// Funzioni per le leghe
+export const getLegheUtente = async () => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    // Ottieni le leghe di cui l'utente fa parte
+    const { data, error } = await supabase
+      .from('giocatori_leghe')
+      .select(`
+        lega_id,
+        leghe!inner(
+          id,
+          nome,
+          descrizione,
+          is_pubblica,
+          creato_da,
+          logo_url,
+          data_creazione,
+          ultima_modifica,
+          codice_invito,
+          attiva
+        )
+      `)
+      .eq('giocatore_id', userData.user.id);
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Trasforma i risultati per estrarre le leghe
+    const leghe = data.map(item => item.leghe) as unknown as Lega[];
+    
+    return { leghe, error: null };
+  } catch (error) {
+    console.error('Errore nel recupero delle leghe:', error);
+    return { leghe: [], error };
+  }
+};
+
+export const creaLega = async (nome: string, descrizione?: string, logo?: File, is_pubblica: boolean = false) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    let logo_url = null;
+    
+    // Se è stato fornito un logo, caricalo in storage
+    if (logo) {
+      const fileExt = logo.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `loghi_leghe/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('loghi')
+        .upload(filePath, logo);
+      
+      if (uploadError) {
+        throw uploadError;
+      }
+      
+      // Ottieni l'URL pubblico del logo caricato
+      const { data: urlData } = supabase.storage
+        .from('loghi')
+        .getPublicUrl(filePath);
+      
+      logo_url = urlData.publicUrl;
+    }
+    
+    // Inserisci la nuova lega
+    const { data, error } = await supabase
+      .from('leghe')
+      .insert({
+        nome,
+        descrizione,
+        is_pubblica,
+        creato_da: userData.user.id,
+        logo_url
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { lega: data as Lega, error: null };
+  } catch (error) {
+    console.error('Errore nella creazione della lega:', error);
+    return { lega: null, error };
+  }
+};
+
+export const getClassificaLega = async (legaId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('vista_classifica_leghe')
+      .select('*')
+      .eq('lega_id', legaId)
+      .order('posizione', { ascending: true });
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { classifica: data as ClassificaLega[], error: null };
+  } catch (error) {
+    console.error('Errore nel recupero della classifica della lega:', error);
+    return { classifica: [], error };
+  }
+};
+
+export const isLegaAdmin = async (legaId: string) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      return { isAdmin: false, error: new Error('Utente non autenticato') };
+    }
+    
+    const { data, error } = await supabase
+      .from('giocatori_leghe')
+      .select('is_admin')
+      .eq('giocatore_id', userData.user.id)
+      .eq('lega_id', legaId)
+      .single();
+    
+    if (error) {
+      return { isAdmin: false, error };
+    }
+    
+    return { isAdmin: data.is_admin, error: null };
+  } catch (error) {
+    console.error('Errore nella verifica dei permessi admin:', error);
+    return { isAdmin: false, error };
+  }
+};
+
+export const partecipaLegaConCodice = async (codiceInvito: string) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    // Trova la lega corrispondente al codice di invito
+    const { data: legaData, error: legaError } = await supabase
+      .from('leghe')
+      .select('id, nome')
+      .eq('codice_invito', codiceInvito.toUpperCase())
+      .eq('attiva', true)
+      .single();
+    
+    if (legaError || !legaData) {
+      throw new Error('Codice di invito non valido o lega non attiva');
+    }
+    
+    // Controlla se l'utente è già nella lega
+    const { data: existingMember } = await supabase
+      .from('giocatori_leghe')
+      .select('id')
+      .eq('giocatore_id', userData.user.id)
+      .eq('lega_id', legaData.id)
+      .maybeSingle();
+    
+    if (existingMember) {
+      return { 
+        success: true, 
+        message: `Sei già un membro della lega ${legaData.nome}`,
+        lega: legaData 
+      };
+    }
+    
+    // Aggiungi l'utente alla lega
+    const { error: joinError } = await supabase
+      .from('giocatori_leghe')
+      .insert({
+        giocatore_id: userData.user.id,
+        lega_id: legaData.id,
+        is_admin: false
+      });
+    
+    if (joinError) {
+      throw joinError;
+    }
+    
+    return { 
+      success: true, 
+      message: `Sei entrato con successo nella lega ${legaData.nome}`,
+      lega: legaData 
+    };
+  } catch (error) {
+    console.error('Errore nell\'entrare nella lega:', error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Errore sconosciuto',
+      lega: null 
+    };
+  }
+};
+
+export const invitaGiocatoreLega = async (emailGiocatore: string, legaId: string) => {
+  try {
+    // Verifica che l'utente attuale sia admin della lega
+    const { isAdmin, error: adminError } = await isLegaAdmin(legaId);
+    
+    if (!isAdmin || adminError) {
+      throw new Error('Non hai i permessi per invitare giocatori in questa lega');
+    }
+    
+    // Ottieni il codice di invito della lega
+    const { data: legaData, error: legaError } = await supabase
+      .from('leghe')
+      .select('nome, codice_invito')
+      .eq('id', legaId)
+      .single();
+    
+    if (legaError || !legaData) {
+      throw new Error('Lega non trovata');
+    }
+    
+    // Ottieni l'utente tramite email
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', emailGiocatore)
+      .maybeSingle();
+    
+    if (userError) {
+      throw userError;
+    }
+    
+    // Se l'utente non esiste, invia comunque un messaggio di successo
+    // (per ragioni di privacy, non rivelare se l'email esiste o meno)
+    if (!userData) {
+      return { 
+        success: true, 
+        message: `Invito inviato all'indirizzo ${emailGiocatore}` 
+      };
+    }
+    
+    // Controlla se l'utente è già nella lega
+    const { data: existingMember } = await supabase
+      .from('giocatori_leghe')
+      .select('id')
+      .eq('giocatore_id', userData.id)
+      .eq('lega_id', legaId)
+      .maybeSingle();
+    
+    if (existingMember) {
+      return { 
+        success: true, 
+        message: `L'utente è già un membro della lega ${legaData.nome}` 
+      };
+    }
+    
+    // Invia l'email di invito (questa è solo una simulazione, l'implementazione reale dipende dal sistema di invio email)
+    // In un sistema reale, qui userei una funzione Edge o una funzione Cloud per inviare l'email
+    console.log(`Invio invito a ${emailGiocatore} per la lega ${legaData.nome} con codice ${legaData.codice_invito}`);
+    
+    return { 
+      success: true, 
+      message: `Invito inviato all'indirizzo ${emailGiocatore}` 
+    };
+  } catch (error) {
+    console.error('Errore nell\'invitare il giocatore:', error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Errore sconosciuto' 
+    };
   }
 };
 

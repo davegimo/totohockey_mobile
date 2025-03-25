@@ -2,20 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
-import { getClassifica } from '../services/supabase';
+import { getClassifica, getLegheUtente, Lega } from '../services/supabase';
 import '../styles/LeghePage.css';
-
-// Tipo per le leghe
-type Lega = {
-  id: string;
-  nome: string;
-  descrizione?: string;
-  is_pubblica: boolean;
-  data_creazione?: string;
-  creata_da?: string;
-  num_partecipanti?: number;
-  posizione_utente?: number;
-};
 
 // Tipo per gli elementi della classifica
 type ClassificaItem = {
@@ -32,10 +20,12 @@ const LeghePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [posizioneUtente, setPosizioneUtente] = useState<number | null>(null);
+  const [numGiocatori, setNumGiocatori] = useState<number>(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchLeghe = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
@@ -49,7 +39,15 @@ const LeghePage = () => {
         
         setUserId(userData.user.id);
         
-        // Ottieni i dati dalla vista_giocatori per la lega pubblica
+        // Ottieni le leghe dell'utente
+        const { leghe: userLeghe, error: legheError } = await getLegheUtente();
+        
+        if (legheError) {
+          console.error('Errore nel recupero delle leghe:', legheError);
+          throw legheError;
+        }
+        
+        // Ottieni i dati dalla vista_giocatori per la classifica generale
         const { classifica: classificaData, error: classificaError } = await getClassifica();
         
         if (classificaError) {
@@ -60,11 +58,9 @@ const LeghePage = () => {
         const giocatori = classificaData as ClassificaItem[];
         
         // Trova la posizione dell'utente corrente nella classifica
-        const posizioneUtente = giocatori.findIndex(g => g.id_giocatore === userData.user.id) + 1;
-        
-        // Per la demo, simula una posizione utente anche per le leghe private
-        const posizioneUtenteMock1 = 3;
-        const posizioneUtenteMock2 = 2;
+        const userPosition = giocatori.findIndex(g => g.id_giocatore === userData.user.id) + 1;
+        setPosizioneUtente(userPosition > 0 ? userPosition : null);
+        setNumGiocatori(giocatori.length);
         
         // Crea la lega pubblica con i dati richiesti
         const legaPubblica: Lega = {
@@ -72,37 +68,14 @@ const LeghePage = () => {
           nome: 'Totocontest 2025',
           descrizione: 'Lega pubblica per vincere fantastici premi!',
           is_pubblica: true,
-          num_partecipanti: giocatori.length,
-          posizione_utente: posizioneUtente || 0,
-          creata_da: 'admin' // Assumiamo che la lega pubblica sia creata dall'admin
+          creato_da: 'admin', // Assumiamo che la lega pubblica sia creata dall'admin
+          data_creazione: new Date().toISOString(),
+          ultima_modifica: new Date().toISOString(),
+          attiva: true
         };
         
-        // Simulo alcune leghe private
-        const legheMock: Lega[] = [
-          {
-            id: 'friends',
-            nome: 'Amici dell\'Hockey',
-            descrizione: 'Lega privata per gli amici appassionati di hockey',
-            is_pubblica: false,
-            data_creazione: '2023-02-15T00:00:00',
-            creata_da: 'Mario Rossi',
-            num_partecipanti: 8,
-            posizione_utente: posizioneUtenteMock1
-          },
-          {
-            id: 'colleghi',
-            nome: 'Lega Colleghi',
-            descrizione: 'Sfida tra colleghi di lavoro',
-            is_pubblica: false,
-            data_creazione: '2023-03-10T00:00:00',
-            creata_da: userData.user.id,
-            num_partecipanti: 5,
-            posizione_utente: posizioneUtenteMock2
-          }
-        ];
-        
-        // Metti la lega pubblica all'inizio dell'array
-        setLeghe([legaPubblica, ...legheMock]);
+        // Imposta l'elenco completo delle leghe con la lega pubblica in cima
+        setLeghe([legaPubblica, ...userLeghe]);
         
       } catch (err) {
         console.error('Errore nel caricamento delle leghe:', err);
@@ -112,7 +85,7 @@ const LeghePage = () => {
       }
     };
     
-    fetchLeghe();
+    fetchData();
   }, [navigate]);
   
   const handleCreaLega = () => {
@@ -123,19 +96,17 @@ const LeghePage = () => {
   // Gestisce il click sul bottone Visualizza Classifica
   const handleVisualizzaClassifica = (lega: Lega) => {
     if (lega.is_pubblica) {
-      // Per la lega pubblica, naviga alla classifica generale
-      navigate('/classifica');
+      // Per la lega pubblica, naviga alla visualizzazione lega con id 'public'
+      navigate('/leghe/public');
     } else {
-      // Per le leghe private, per ora mostra solo un messaggio
-      // In futuro si potrà implementare una visualizzazione specifica
-      console.log(`Visualizzazione classifica per la lega privata: ${lega.id}`);
-      alert('Funzionalità in fase di sviluppo per le leghe private');
+      // Per le leghe private, naviga alla visualizzazione lega con l'id della lega
+      navigate(`/leghe/${lega.id}`);
     }
   };
 
   // Verifica se l'utente è admin della lega
   const isLegaAdmin = (lega: Lega) => {
-    return lega.creata_da === userId;
+    return lega.creato_da === userId;
   };
 
   // Icona corona per admin
@@ -144,6 +115,17 @@ const LeghePage = () => {
       👑
     </span>
   );
+
+  // Determina il numero di partecipanti da mostrare per ogni lega
+  const getNumeroPartecipanti = (lega: Lega) => {
+    if (lega.is_pubblica) {
+      return numGiocatori;
+    }
+    
+    // Per le leghe private, per ora mostriamo un valore fisso
+    // In futuro, questo dato proverrà dal database
+    return 5; // Valore temporaneo
+  };
 
   return (
     <Layout>
@@ -190,19 +172,22 @@ const LeghePage = () => {
                   )}
                   
                   <div className="lega-info">
-                    {lega.posizione_utente !== undefined && (
+                    {lega.is_pubblica && posizioneUtente ? (
                       <div className="lega-posizione">
                         <span className="info-label">La tua posizione:</span> 
-                        {lega.posizione_utente === 0 ? 'Non classificato' : `${lega.posizione_utente}° posto`}
+                        {posizioneUtente === 0 ? 'Non classificato' : `${posizioneUtente}° posto`}
+                      </div>
+                    ) : (
+                      <div className="lega-posizione">
+                        <span className="info-label">La tua posizione:</span> 
+                        Classifica in arrivo
                       </div>
                     )}
                     
-                    {lega.num_partecipanti !== undefined && (
-                      <div className="lega-partecipanti">
-                        <span className="info-label">Partecipanti:</span> 
-                        {lega.num_partecipanti}
-                      </div>
-                    )}
+                    <div className="lega-partecipanti">
+                      <span className="info-label">Partecipanti:</span> 
+                      {getNumeroPartecipanti(lega)}
+                    </div>
                   </div>
                   
                   <div className="lega-actions">
