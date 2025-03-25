@@ -783,34 +783,35 @@ export const getLegheUtente = async () => {
       throw new Error('Utente non autenticato');
     }
     
-    // Ottieni le leghe di cui l'utente fa parte
-    const { data, error } = await supabase
+    // Prima ottieni gli ID delle leghe dell'utente
+    const { data: legheMembro, error: errorLegheMembro } = await supabase
       .from('giocatori_leghe')
-      .select(`
-        lega_id,
-        leghe!inner(
-          id,
-          nome,
-          descrizione,
-          is_pubblica,
-          creato_da,
-          logo_url,
-          data_creazione,
-          ultima_modifica,
-          codice_invito,
-          attiva
-        )
-      `)
+      .select('lega_id')
       .eq('giocatore_id', userData.user.id);
+    
+    if (errorLegheMembro) {
+      throw errorLegheMembro;
+    }
+    
+    // Estrai gli ID delle leghe
+    const legheIds = legheMembro.map(item => item.lega_id);
+    
+    // Se l'utente non è membro di alcuna lega, restituisci un array vuoto
+    if (legheIds.length === 0) {
+      return { leghe: [], error: null };
+    }
+    
+    // Ottieni i dettagli delle leghe
+    const { data, error } = await supabase
+      .from('leghe')
+      .select('*')
+      .in('id', legheIds);
     
     if (error) {
       throw error;
     }
     
-    // Trasforma i risultati per estrarre le leghe
-    const leghe = data.map(item => item.leghe) as unknown as Lega[];
-    
-    return { leghe, error: null };
+    return { leghe: data as Lega[], error: null };
   } catch (error) {
     console.error('Errore nel recupero delle leghe:', error);
     return { leghe: [], error };
@@ -1051,6 +1052,112 @@ export const invitaGiocatoreLega = async (emailGiocatore: string, legaId: string
       success: false, 
       message: error instanceof Error ? error.message : 'Errore sconosciuto' 
     };
+  }
+};
+
+// Nuova funzione per ottenere una lega per ID, utile in LegaPage
+export const getLegaById = async (legaId: string) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    // Query diretta per ottenere i dettagli della lega
+    const { data, error } = await supabase
+      .from('leghe')
+      .select('*')
+      .eq('id', legaId)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    // Verifica che l'utente sia membro della lega privata
+    if (!data.is_pubblica) {
+      const { data: membership, error: membershipError } = await supabase
+        .from('giocatori_leghe')
+        .select('id')
+        .eq('giocatore_id', userData.user.id)
+        .eq('lega_id', legaId)
+        .maybeSingle();
+      
+      if (membershipError || !membership) {
+        throw new Error('Non sei membro di questa lega privata');
+      }
+    }
+    
+    return { lega: data as Lega, error: null };
+  } catch (error) {
+    console.error('Errore nel recupero della lega:', error);
+    return { lega: null, error };
+  }
+};
+
+// Aggiorniamo la funzione getGiocatoriLega per ottenere i membri di una lega
+export const getGiocatoriLega = async (legaId: string) => {
+  try {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error('Utente non autenticato');
+    }
+    
+    // Verifica che la lega sia pubblica o che l'utente sia il creatore
+    const { data: lega, error: legaError } = await supabase
+      .from('leghe')
+      .select('*')
+      .eq('id', legaId)
+      .single();
+    
+    if (legaError || !lega) {
+      throw new Error('Lega non trovata');
+    }
+    
+    // Se è una lega pubblica o l'utente è il creatore, ottieni tutti i membri
+    if (lega.is_pubblica || lega.creato_da === userData.user.id) {
+      const { data, error } = await supabase
+        .from('vista_classifica_leghe')
+        .select('*')
+        .eq('lega_id', legaId)
+        .order('posizione', { ascending: true });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { giocatori: data as ClassificaLega[], error: null };
+    } else {
+      // Altrimenti, verifica che l'utente sia membro della lega
+      const { data: membership, error: membershipError } = await supabase
+        .from('giocatori_leghe')
+        .select('id')
+        .eq('giocatore_id', userData.user.id)
+        .eq('lega_id', legaId)
+        .maybeSingle();
+      
+      if (membershipError || !membership) {
+        throw new Error('Non sei membro di questa lega privata');
+      }
+      
+      // Se l'utente è membro, ottieni la classifica
+      const { data, error } = await supabase
+        .from('vista_classifica_leghe')
+        .select('*')
+        .eq('lega_id', legaId)
+        .order('posizione', { ascending: true });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return { giocatori: data as ClassificaLega[], error: null };
+    }
+  } catch (error) {
+    console.error('Errore nel recupero dei giocatori della lega:', error);
+    return { giocatori: [], error };
   }
 };
 
