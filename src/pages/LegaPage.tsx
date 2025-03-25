@@ -158,8 +158,8 @@ const LegaPage = () => {
   if (loading) {
     return (
       <Layout>
-        <div className="lega-page">
-          <div className="loading">Caricamento dati lega...</div>
+        <div className="lega-dettaglio-page">
+          <div className="lega-dettaglio-loading">Caricamento dati lega...</div>
         </div>
       </Layout>
     );
@@ -168,9 +168,9 @@ const LegaPage = () => {
   if (error || !lega) {
     return (
       <Layout>
-        <div className="lega-page">
-          <div className="error-message">{error || 'Errore nel caricamento della lega'}</div>
-          <button className="torna-leghe-button" onClick={handleTornaLeghe}>
+        <div className="lega-dettaglio-page">
+          <div className="lega-dettaglio-error-message">{error || 'Errore nel caricamento della lega'}</div>
+          <button className="lega-dettaglio-torna-button" onClick={handleTornaLeghe}>
             Torna alle Leghe
           </button>
         </div>
@@ -180,47 +180,47 @@ const LegaPage = () => {
 
   return (
     <Layout>
-      <div className="lega-page">
-        <button className="torna-leghe-button" onClick={handleTornaLeghe}>
+      <div className="lega-dettaglio-page">
+        <button className="lega-dettaglio-torna-button" onClick={handleTornaLeghe}>
           &larr; Torna alle Leghe
         </button>
         
-        <div className="lega-header-container">
-          <div className="lega-logo-container">
+        <div className="lega-dettaglio-header">
+          <div className="lega-dettaglio-logo-container">
             {lega.logo_url ? (
               <img 
                 src={lega.logo_url} 
                 alt={`Logo ${lega.nome}`} 
-                className="lega-logo" 
+                className="lega-dettaglio-logo" 
               />
             ) : (
-              <div className="lega-logo-placeholder">
+              <div className="lega-dettaglio-logo-placeholder">
                 {lega.nome.substring(0, 2).toUpperCase()}
               </div>
             )}
           </div>
           
-          <div className="lega-info-container">
-            <h1 className="lega-nome">
+          <div className="lega-dettaglio-info-container">
+            <h1 className="lega-dettaglio-nome">
               {lega.nome}
-              {lega.is_pubblica && <span className="lega-badge pubblica">Pubblica</span>}
-              {!lega.is_pubblica && <span className="lega-badge privata">Privata</span>}
+              {lega.is_pubblica && <span className="lega-dettaglio-badge pubblica">Pubblica</span>}
+              {!lega.is_pubblica && <span className="lega-dettaglio-badge privata">Privata</span>}
             </h1>
             
             {lega.descrizione && (
-              <p className="lega-descrizione">{lega.descrizione}</p>
+              <p className="lega-dettaglio-descrizione">{lega.descrizione}</p>
             )}
             
-            <p className="lega-partecipanti">
-              <span className="info-label">Partecipanti:</span> {classifica.length}
+            <p className="lega-dettaglio-partecipanti">
+              <span className="lega-dettaglio-info-label">Partecipanti:</span> {classifica.length}
             </p>
           </div>
         </div>
         
         {isAdmin && (
-          <div className="admin-actions">
+          <div className="lega-dettaglio-admin-actions">
             <button 
-              className="ricalcola-button"
+              className="lega-dettaglio-ricalcola-button"
               onClick={handleRicalcolaClassifica}
               disabled={loadingRicalcolo}
             >
@@ -228,7 +228,7 @@ const LegaPage = () => {
             </button>
             
             {!lega.is_pubblica && (
-              <button className="invita-button">
+              <button className="lega-dettaglio-invita-button">
                 Invita Giocatori
               </button>
             )}
@@ -236,43 +236,43 @@ const LegaPage = () => {
         )}
         
         {successMessage && (
-          <div className="success-message">
+          <div className="lega-dettaglio-success-message">
             {successMessage}
           </div>
         )}
         
-        <div className="lega-classifica-container">
-          <h2 className="classifica-titolo">Classifica</h2>
+        <div className="lega-dettaglio-classifica-container">
+          <h2 className="lega-dettaglio-classifica-titolo">Classifica</h2>
           
           {classifica.length === 0 ? (
-            <p className="no-classifica">
+            <p className="lega-dettaglio-no-classifica">
               Non ci sono ancora giocatori classificati in questa lega.
             </p>
           ) : (
-            <div className="classifica-table-container">
-              <table className="classifica-table">
+            <div className="lega-dettaglio-classifica-table-container">
+              <table className="lega-dettaglio-classifica-table">
                 <thead>
                   <tr>
-                    <th className="position-col">Pos.</th>
-                    <th className="player-col">Giocatore</th>
-                    <th className="points-col">Punti</th>
-                    <th className="results-col">Ris. Esatti</th>
-                    <th className="outcomes-col">Esiti</th>
+                    <th className="lega-dettaglio-position-col">Pos.</th>
+                    <th className="lega-dettaglio-player-col">Giocatore</th>
+                    <th className="lega-dettaglio-points-col">Punti</th>
+                    <th className="lega-dettaglio-results-col">Ris. Esatti</th>
+                    <th className="lega-dettaglio-outcomes-col">Esiti</th>
                   </tr>
                 </thead>
                 <tbody>
                   {classifica.map((item) => (
-                    <tr key={item.id} className={item.is_admin ? 'admin-row' : ''}>
-                      <td className="position-col">{item.posizione}</td>
-                      <td className="player-col">
-                        <span className="player-name">{item.nome} {item.cognome}</span>
+                    <tr key={item.id} className={item.is_admin ? 'lega-dettaglio-admin-row' : ''}>
+                      <td className="lega-dettaglio-position-col">{item.posizione}</td>
+                      <td className="lega-dettaglio-player-col">
+                        <span className="lega-dettaglio-player-name">{item.nome} {item.cognome}</span>
                         {item.is_admin && (
-                          <span className="admin-badge" title="Amministratore">👑</span>
+                          <span className="lega-dettaglio-admin-badge" title="Amministratore">👑</span>
                         )}
                       </td>
-                      <td className="points-col">{item.punti_totali}</td>
-                      <td className="results-col">{item.risultati_esatti}</td>
-                      <td className="outcomes-col">{item.esiti_presi}</td>
+                      <td className="lega-dettaglio-points-col">{item.punti_totali}</td>
+                      <td className="lega-dettaglio-results-col">{item.risultati_esatti}</td>
+                      <td className="lega-dettaglio-outcomes-col">{item.esiti_presi}</td>
                     </tr>
                   ))}
                 </tbody>

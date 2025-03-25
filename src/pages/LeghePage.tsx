@@ -96,8 +96,8 @@ const LeghePage = () => {
   // Gestisce il click sul bottone Visualizza Classifica
   const handleVisualizzaClassifica = (lega: Lega) => {
     if (lega.is_pubblica) {
-      // Per la lega pubblica, naviga alla visualizzazione lega con id 'public'
-      navigate('/leghe/public');
+      // Per la lega pubblica, naviga alla classifica generale
+      navigate('/classifica');
     } else {
       // Per le leghe private, naviga alla visualizzazione lega con l'id della lega
       navigate(`/leghe/${lega.id}`);
@@ -111,7 +111,7 @@ const LeghePage = () => {
 
   // Icona corona per admin
   const AdminCrown = () => (
-    <span className="admin-crown" title="Sei l'amministratore di questa lega">
+    <span className="leghe-admin-crown" title="Sei l'amministratore di questa lega">
       👑
     </span>
   );
@@ -130,11 +130,11 @@ const LeghePage = () => {
   return (
     <Layout>
       <div className="leghe-page">
-        <h1 className="pagina-titolo">Le Mie Leghe</h1>
+        <h1 className="leghe-pagina-titolo">Le Mie Leghe</h1>
         
-        <div className="crea-lega-container">
+        <div className="leghe-crea-container">
           <button 
-            className="crea-lega-button"
+            className="leghe-crea-button"
             onClick={handleCreaLega}
           >
             Crea Lega
@@ -142,64 +142,64 @@ const LeghePage = () => {
         </div>
         
         {error && (
-          <div className="error-message">
+          <div className="leghe-error-message">
             {error}
           </div>
         )}
         
         {loading ? (
-          <div className="loading">Caricamento leghe...</div>
+          <div className="leghe-loading">Caricamento leghe...</div>
         ) : (
           <div className="leghe-lista">
             {leghe.length === 0 ? (
-              <p className="no-leghe">Non fai parte di nessuna lega</p>
+              <p className="leghe-no-leghe">Non fai parte di nessuna lega</p>
             ) : (
               leghe.map(lega => (
                 <div 
                   key={lega.id} 
-                  className={`lega-card ${lega.is_pubblica ? 'lega-pubblica' : 'lega-privata'}`}
+                  className={`leghe-card ${lega.is_pubblica ? 'leghe-card-pubblica' : 'leghe-card-privata'}`}
                 >
-                  <div className="lega-header">
-                    <h2 className="lega-nome">
+                  <div className="leghe-card-header">
+                    <h2 className="leghe-card-nome">
                       {lega.nome} {isLegaAdmin(lega) && !lega.is_pubblica && <AdminCrown />}
                     </h2>
-                    {lega.is_pubblica && <span className="lega-badge pubblica">Pubblica</span>}
-                    {!lega.is_pubblica && <span className="lega-badge privata">Privata</span>}
+                    {lega.is_pubblica && <span className="leghe-badge pubblica">Pubblica</span>}
+                    {!lega.is_pubblica && <span className="leghe-badge privata">Privata</span>}
                   </div>
                   
                   {lega.descrizione && (
-                    <p className="lega-descrizione">{lega.descrizione}</p>
+                    <p className="leghe-card-descrizione">{lega.descrizione}</p>
                   )}
                   
-                  <div className="lega-info">
+                  <div className="leghe-card-info">
                     {lega.is_pubblica && posizioneUtente ? (
                       <div className="lega-posizione">
-                        <span className="info-label">La tua posizione:</span> 
+                        <span className="leghe-info-label">La tua posizione:</span> 
                         {posizioneUtente === 0 ? 'Non classificato' : `${posizioneUtente}° posto`}
                       </div>
                     ) : (
                       <div className="lega-posizione">
-                        <span className="info-label">La tua posizione:</span> 
+                        <span className="leghe-info-label">La tua posizione:</span> 
                         Classifica in arrivo
                       </div>
                     )}
                     
                     <div className="lega-partecipanti">
-                      <span className="info-label">Partecipanti:</span> 
+                      <span className="leghe-info-label">Partecipanti:</span> 
                       {getNumeroPartecipanti(lega)}
                     </div>
                   </div>
                   
-                  <div className="lega-actions">
+                  <div className="leghe-card-actions">
                     <button 
-                      className="visualizza-lega-button"
+                      className="leghe-visualizza-button"
                       onClick={() => handleVisualizzaClassifica(lega)}
                     >
                       {lega.is_pubblica ? 'Visualizza Classifica' : 'Visualizza'}
                     </button>
                     
                     {!lega.is_pubblica && isLegaAdmin(lega) && (
-                      <button className="invita-button">
+                      <button className="leghe-invita-button">
                         Invita Giocatori
                       </button>
                     )}
