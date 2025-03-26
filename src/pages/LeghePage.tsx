@@ -203,6 +203,12 @@ const LeghePage = () => {
           >
             Crea Lega
           </button>
+          <button
+            className="leghe-partecipa-button"
+            onClick={() => navigate('/partecipa')}
+          >
+            Partecipa
+          </button>
         </div>
         
         {error && (

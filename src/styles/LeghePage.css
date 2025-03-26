@@ -13,6 +13,7 @@
   display: flex;
   justify-content: center;
   margin-bottom: 2rem;
+  gap: 15px;
 }
 
 .leghe-crea-button {
@@ -222,4 +223,22 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.leghe-partecipa-button {
+  background-color: #fff;
+  color: #3498db;
+  border: 2px solid #3498db;
+  border-radius: 4px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.leghe-partecipa-button:hover {
+  background-color: #ecf0f1;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 } 

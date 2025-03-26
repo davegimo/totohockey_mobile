@@ -1219,4 +1219,62 @@ const generateRandomCode = (length: number): string => {
   return result;
 };
 
+// Funzione per ottenere i dettagli di una lega dal codice di invito
+export const getLegaByInviteCode = async (codiceInvito: string) => {
+  try {
+    if (!codiceInvito) {
+      return { lega: null, error: new Error('Codice invito non valido o mancante') };
+    }
+    
+    // Trova la lega corrispondente al codice di invito
+    const { data, error } = await supabase
+      .from('leghe')
+      .select('*, profiles(nome, cognome)')
+      .eq('codice_invito', codiceInvito.toUpperCase())
+      .eq('attiva', true)
+      .single();
+    
+    if (error) {
+      return { lega: null, error };
+    }
+
+    // Ottieni il numero di partecipanti
+    const { count, error: countError } = await supabase
+      .from('giocatori_leghe')
+      .select('*', { count: 'exact', head: true })
+      .eq('lega_id', data.id);
+      
+    if (countError) {
+      console.error('Errore nel conteggio dei partecipanti:', countError);
+    }
+    
+    // Verifica se il link di invito è scaduto
+    const isLinkScaduto = verificaScadenzaLink(data.ultimo_invito);
+    
+    // Ritorna la lega con il conteggio dei partecipanti
+    return { 
+      lega: { 
+        ...data as Lega, 
+        numero_partecipanti: count || 0,
+        link_scaduto: isLinkScaduto
+      }, 
+      error: null 
+    };
+  } catch (error) {
+    console.error('Errore nel recupero della lega dal codice invito:', error);
+    return { lega: null, error };
+  }
+};
+
+// Funzione utility per verificare se un link di invito è scaduto
+export const verificaScadenzaLink = (ultimoInvito: string | null | undefined) => {
+  if (!ultimoInvito) return true;
+  
+  const dataUltimoInvito = new Date(ultimoInvito);
+  const now = new Date();
+  const diffInHours = (now.getTime() - dataUltimoInvito.getTime()) / (1000 * 60 * 60);
+  
+  return diffInHours > 12; // Il link scade dopo 12 ore
+};
+
 export default supabase;

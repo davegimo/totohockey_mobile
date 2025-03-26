@@ -56,6 +56,16 @@ const router = createBrowserRouter([
     element: <PartecipaPagina />
   },
   {
+    path: '/partecipa',
+    element: <AuthProtectedRoute />,
+    children: [
+      {
+        index: true,
+        element: <PartecipaPagina />
+      }
+    ]
+  },
+  {
     path: '/dashboard',
     element: <AuthProtectedRoute />,
     children: [

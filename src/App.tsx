@@ -18,6 +18,7 @@ import CreaLegaPage from './pages/CreaLegaPage'
 import LegaPage from './pages/LegaPage'
 import AuthProtectedRoute from './router/AuthProtectedRoute'
 import Providers from './Providers'
+import PartecipaPagina from './pages/PartecipaPagina'
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/partecipa/:codiceInvito" element={<PartecipaPagina />} />
           
           {/* Rotte protette */}
           <Route element={<AuthProtectedRoute />}>
@@ -38,6 +40,7 @@ function App() {
             <Route path="/leghe" element={<LeghePage />} />
             <Route path="/leghe/crea" element={<CreaLegaPage />} />
             <Route path="/leghe/:id" element={<LegaPage />} />
+            <Route path="/partecipa" element={<PartecipaPagina />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/regole" element={<RegolePage />} />

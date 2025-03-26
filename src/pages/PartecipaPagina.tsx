@@ -1,196 +1,255 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { partecipaLegaConCodice, getCurrentUser } from '../services/supabase';
+import { partecipaLegaConCodice, getLegaByInviteCode } from '../services/supabase';
 import '../styles/PartecipaPagina.css';
 
+// Tipo per i dettagli della lega
+type LegaDettagli = {
+  id: string;
+  nome: string;
+  descrizione: string;
+  data_creazione: string;
+  numero_partecipanti: number;
+  creato_da: string;
+  logo_url?: string;
+  profiles?: {
+    nome: string;
+    cognome: string;
+  };
+  link_scaduto: boolean;
+};
+
 const PartecipaPagina: React.FC = () => {
-  const { codiceInvito } = useParams<{ codiceInvito: string }>();
+  const { codiceInvito: urlCodiceInvito } = useParams<{ codiceInvito?: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [codiceInvito, setCodiceInvito] = useState(urlCodiceInvito || '');
+  const [legaDettagli, setLegaDettagli] = useState<LegaDettagli | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [redirectTimer, setRedirectTimer] = useState(15); // Aumentato a 15 secondi per avere più tempo di vedere cosa succede
-  const [legaId, setLegaId] = useState<string | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [redirectTimer, setRedirectTimer] = useState(5);
+  const [showModal, setShowModal] = useState(false);
+  const [cercaLegaInCorso, setCercaLegaInCorso] = useState(false);
 
-  // Funzione per aggiungere log
-  const addLog = (message: string) => {
-    console.log(message);
-    setLogs(prevLogs => [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
-
-  // Verifica l'autenticazione
+  // Cerca automaticamente la lega se c'è un codice nell'URL
   useEffect(() => {
-    const checkAuth = async () => {
-      addLog('Verifica autenticazione...');
-      const user = await getCurrentUser();
-      
-      if (user) {
-        addLog(`Utente autenticato: ${user.id}`);
-        setIsAuthenticated(true);
-      } else {
-        addLog('Utente non autenticato. Reindirizzamento alla pagina di login...');
-        setIsAuthenticated(false);
-        
-        // Salva il codice di invito nella sessione per poterlo recuperare dopo il login
-        if (codiceInvito) {
-          sessionStorage.setItem('pendingInvite', codiceInvito);
-          addLog(`Codice invito ${codiceInvito} salvato in sessione per dopo il login`);
-        }
-        
-        // Reindirizza al login dopo 2 secondi (per vedere i log)
-        setTimeout(() => {
-          navigate('/login', { state: { redirectAfterLogin: `/partecipa/${codiceInvito}` } });
-        }, 2000);
-      }
-    };
+    if (urlCodiceInvito) {
+      cercaLega(urlCodiceInvito);
+    }
+  }, [urlCodiceInvito]);
+
+  // Funzione per cercare la lega dato il codice di invito
+  const cercaLega = async (codice: string) => {
+    if (!codice) {
+      setError('Inserisci un codice di invito valido');
+      return;
+    }
+
+    setCercaLegaInCorso(true);
+    setError(null);
+    setLegaDettagli(null);
     
-    checkAuth();
-  }, [codiceInvito, navigate]);
-
-  useEffect(() => {
-    const partecipa = async () => {
-      // Non procedere se l'utente non è autenticato o se lo stato di autenticazione non è ancora verificato
-      if (isAuthenticated !== true) {
+    try {
+      const { lega, error } = await getLegaByInviteCode(codice);
+      
+      if (error || !lega) {
+        setError('Codice di invito non valido o lega non trovata');
         return;
       }
       
-      addLog(`Avvio funzione partecipa con codice: ${codiceInvito}`);
-      
-      if (!codiceInvito) {
-        addLog('Codice invito non valido (vuoto)');
-        setError('Codice invito non valido');
-        setLoading(false);
+      // Verifica se il link è scaduto
+      if (lega.link_scaduto) {
+        setError('Il link di invito è scaduto. Chiedi all\'amministratore della lega di generarne uno nuovo.');
         return;
       }
-
-      try {
-        addLog(`Tentativo di partecipazione con codice: ${codiceInvito}`);
-        
-        const { success, message, lega } = await partecipaLegaConCodice(codiceInvito);
-        
-        addLog(`Risposta ricevuta: success=${success}, message=${message}, lega=${lega ? 'presente' : 'assente'}`);
-        
-        setLoading(false);
-        
-        if (success) {
-          if (lega) {
-            addLog(`Lega trovata con ID: ${lega.id}, nome: ${lega.nome}`);
-            setLegaId(lega.id);
-          } else {
-            addLog('Lega non trovata nella risposta nonostante success=true');
-          }
-          
-          setSuccess(message);
-          addLog(`Successo: ${message}`);
-          
-          // Se la partecipazione è andata a buon fine, inizia il conto alla rovescia per il reindirizzamento
-          let timer = redirectTimer;
-          setRedirectTimer(timer);
-          
-          // Imposta un intervallo per aggiornare il timer
-          const interval = setInterval(() => {
-            timer--;
-            setRedirectTimer(timer);
-            
-            if (timer <= 0) {
-              clearInterval(interval);
-              if (lega) {
-                addLog(`Reindirizzamento a /leghe/${lega.id}`);
-                navigate(`/leghe/${lega.id}`);
-              } else {
-                addLog('Reindirizzamento a /leghe');
-                navigate('/leghe');
-              }
-            }
-          }, 1000);
-          
-          return () => clearInterval(interval);
-        } else {
-          addLog(`Errore: ${message}`);
-          setError(message);
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
-        addLog(`Eccezione: ${errorMessage}`);
-        console.error('Errore durante la partecipazione alla lega:', error);
-        setLoading(false);
-        setError(error instanceof Error ? error.message : 'Si è verificato un errore durante la partecipazione alla lega');
-      }
-    };
-
-    partecipa();
-  }, [codiceInvito, navigate, redirectTimer, isAuthenticated]);
-
-  const handleTornaLeghe = () => {
-    if (legaId) {
-      addLog(`Clic su bottone - navigazione a /leghe/${legaId}`);
-      navigate(`/leghe/${legaId}`);
-    } else {
-      addLog('Clic su bottone - navigazione a /leghe');
-      navigate('/leghe');
+      
+      setLegaDettagli(lega as LegaDettagli);
+    } catch (err) {
+      console.error('Errore nella ricerca della lega:', err);
+      setError('Si è verificato un errore durante la ricerca della lega');
+    } finally {
+      setCercaLegaInCorso(false);
     }
   };
 
-  // Renderizza un messaggio di controllo autenticazione se lo stato non è ancora definito
-  if (isAuthenticated === false) {
-    return (
-      <Layout>
-        <div className="partecipa-page">
-          <h1 className="partecipa-titolo">Reindirizzamento</h1>
-          <div className="partecipa-loading">
-            <p>Devi eseguire il login per partecipare alla lega.</p>
-            <p>Stai per essere reindirizzato alla pagina di login...</p>
-            <div className="partecipa-spinner"></div>
-          </div>
-          {/* Area di log, visibile solo in ambiente di sviluppo */}
-          {import.meta.env.DEV && (
-            <div className="partecipa-logs">
-              <h3>Log di debug:</h3>
-              <pre>
-                {logs.length > 0 ? 
-                  logs.map((log, index) => <div key={index}>{log}</div>) : 
-                  'Nessun log disponibile.'}
-              </pre>
-              <div>
-                <strong>Codice invito:</strong> {codiceInvito || 'non disponibile'}
-              </div>
-            </div>
-          )}
-        </div>
-      </Layout>
-    );
-  }
+  // Funzione per partecipare alla lega
+  const partecipaLega = async () => {
+    if (!legaDettagli || !codiceInvito) {
+      setError('Informazioni lega mancanti');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      const { success, message } = await partecipaLegaConCodice(codiceInvito);
+      
+      setLoading(false);
+      
+      if (success) {
+        setSuccess(message);
+        setShowModal(false);
+        
+        // Inizia il conto alla rovescia per il reindirizzamento
+        let timer = redirectTimer;
+        
+        const interval = setInterval(() => {
+          timer--;
+          setRedirectTimer(timer);
+          
+          if (timer <= 0) {
+            clearInterval(interval);
+            navigate('/leghe');
+          }
+        }, 1000);
+        
+        return () => clearInterval(interval);
+      } else {
+        setError(message);
+      }
+    } catch (err) {
+      console.error('Errore durante la partecipazione alla lega:', err);
+      setLoading(false);
+      setError('Si è verificato un errore durante la partecipazione alla lega');
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    cercaLega(codiceInvito);
+  };
+
+  const handlePartecipa = () => {
+    setShowModal(true);
+  };
+
+  const handleConfirm = () => {
+    partecipaLega();
+  };
+
+  const handleCancel = () => {
+    setShowModal(false);
+  };
+
+  const handleTornaLeghe = () => {
+    navigate('/leghe');
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
 
   return (
     <Layout>
       <div className="partecipa-page">
-        <h1 className="partecipa-titolo">Partecipa alla Lega</h1>
+        <h1 className="partecipa-titolo">Partecipa a una Lega</h1>
         
-        {isAuthenticated === null ? (
-          <div className="partecipa-loading">
-            <p>Verifica autenticazione in corso...</p>
-            <div className="partecipa-spinner"></div>
+        <div className="partecipa-top-nav">
+          <button 
+            className="partecipa-back-button"
+            onClick={() => navigate('/leghe')}
+          >
+            ← Torna alle Leghe
+          </button>
+        </div>
+        
+        {!success ? (
+          <div className="partecipa-form-container">
+            <form onSubmit={handleSubmit} className="partecipa-form">
+              <div className="partecipa-form-group">
+                <label htmlFor="codiceInvito" className="partecipa-label">
+                  Inserisci il codice di invito:
+                </label>
+                <div className="partecipa-input-group">
+                  <input
+                    type="text"
+                    id="codiceInvito"
+                    className="partecipa-input"
+                    value={codiceInvito}
+                    onChange={(e) => setCodiceInvito(e.target.value.trim().toUpperCase())}
+                    placeholder="Es. ABCD1234"
+                    autoComplete="off"
+                  />
+                  <button 
+                    type="submit" 
+                    className="partecipa-cerca-button"
+                    disabled={cercaLegaInCorso}
+                  >
+                    {cercaLegaInCorso ? 'Ricerca...' : 'Cerca'}
+                  </button>
+                </div>
+              </div>
+            </form>
+            
+            {error && (
+              <div className="partecipa-error-message">
+                <p>{error}</p>
+              </div>
+            )}
+
+            {legaDettagli && (
+              <div className="partecipa-lega-card">
+                <div className="partecipa-lega-header">
+                  <h2 className="partecipa-lega-nome">{legaDettagli.nome}</h2>
+                  {legaDettagli.logo_url && (
+                    <div className="partecipa-lega-logo">
+                      <img src={legaDettagli.logo_url} alt={`Logo ${legaDettagli.nome}`} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="partecipa-lega-info">
+                  <p className="partecipa-lega-descrizione">
+                    {legaDettagli.descrizione || 'Nessuna descrizione disponibile'}
+                  </p>
+                  
+                  <div className="partecipa-lega-details">
+                    <div className="partecipa-lega-detail">
+                      <span className="partecipa-detail-label">Creata da:</span>
+                      <span className="partecipa-detail-value">
+                        {legaDettagli.profiles 
+                          ? `${legaDettagli.profiles.nome} ${legaDettagli.profiles.cognome}`
+                          : 'Admin'}
+                      </span>
+                    </div>
+                    
+                    <div className="partecipa-lega-detail">
+                      <span className="partecipa-detail-label">Data creazione:</span>
+                      <span className="partecipa-detail-value">
+                        {formatDate(legaDettagli.data_creazione)}
+                      </span>
+                    </div>
+                    
+                    <div className="partecipa-lega-detail">
+                      <span className="partecipa-detail-label">Partecipanti:</span>
+                      <span className="partecipa-detail-value">
+                        {legaDettagli.numero_partecipanti}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="partecipa-lega-actions">
+                    <button 
+                      className="partecipa-button"
+                      onClick={handlePartecipa}
+                      disabled={loading}
+                    >
+                      Partecipa alla Lega
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        ) : loading ? (
-          <div className="partecipa-loading">
-            <p>Stiamo elaborando la tua richiesta...</p>
-            <div className="partecipa-spinner"></div>
-          </div>
-        ) : error ? (
-          <div className="partecipa-error">
-            <h2>Si è verificato un errore</h2>
-            <p>{error}</p>
-            <button 
-              className="partecipa-button"
-              onClick={handleTornaLeghe}
-            >
-              Torna alle mie leghe
-            </button>
-          </div>
-        ) : success ? (
+        ) : (
           <div className="partecipa-success">
             <h2>Operazione completata!</h2>
             <p>{success}</p>
@@ -204,33 +263,31 @@ const PartecipaPagina: React.FC = () => {
               Vai alle mie leghe
             </button>
           </div>
-        ) : (
-          <div className="partecipa-error">
-            <h2>Codice non valido</h2>
-            <p>Il codice di invito non è valido o è scaduto.</p>
-            <button 
-              className="partecipa-button"
-              onClick={handleTornaLeghe}
-            >
-              Torna alle mie leghe
-            </button>
-          </div>
         )}
         
-        {/* Area di log, visibile solo in ambiente di sviluppo */}
-        {import.meta.env.DEV && (
-          <div className="partecipa-logs">
-            <h3>Log di debug:</h3>
-            <pre>
-              {logs.length > 0 ? 
-                logs.map((log, index) => <div key={index}>{log}</div>) : 
-                'Nessun log disponibile.'}
-            </pre>
-            <div>
-              <strong>Codice invito:</strong> {codiceInvito || 'non disponibile'}
-            </div>
-            <div>
-              <strong>Stato autenticazione:</strong> {isAuthenticated === null ? 'verificando...' : isAuthenticated ? 'autenticato' : 'non autenticato'}
+        {/* Modal di conferma partecipazione */}
+        {showModal && (
+          <div className="partecipa-modal-overlay">
+            <div className="partecipa-modal">
+              <h2>Conferma Partecipazione</h2>
+              <p>Sei sicuro di voler partecipare alla lega <strong>{legaDettagli?.nome}</strong>?</p>
+              
+              <div className="partecipa-modal-actions">
+                <button 
+                  className="partecipa-modal-cancel" 
+                  onClick={handleCancel}
+                  disabled={loading}
+                >
+                  Annulla
+                </button>
+                <button 
+                  className="partecipa-modal-confirm" 
+                  onClick={handleConfirm}
+                  disabled={loading}
+                >
+                  {loading ? 'Elaborazione...' : 'Conferma'}
+                </button>
+              </div>
             </div>
           </div>
         )}
