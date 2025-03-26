@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
-import { ClassificaLega, Lega, getClassificaLega, isLegaAdmin } from '../services/supabase';
+import { ClassificaLega, Lega, getClassificaLega, isLegaAdmin, rigeneraLinkInvito } from '../services/supabase';
+import InvitoModal from '../components/InvitoModal';
 import '../styles/LegaPage.css';
 
 const LegaPage = () => {
@@ -16,6 +17,19 @@ const LegaPage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingRicalcolo, setLoadingRicalcolo] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showInvitoModal, setShowInvitoModal] = useState(false);
+  const [isLinkScaduto, setIsLinkScaduto] = useState(false);
+  
+  // Funzione per verificare se il link è scaduto
+  const verificaScadenzaLink = (ultimoInvito: string | null) => {
+    if (!ultimoInvito) return true;
+    
+    const dataUltimoInvito = new Date(ultimoInvito);
+    const now = new Date();
+    const diffInHours = (now.getTime() - dataUltimoInvito.getTime()) / (1000 * 60 * 60);
+    
+    return diffInHours > 12;
+  };
   
   useEffect(() => {
     const fetchLegaData = async () => {
@@ -69,6 +83,9 @@ const LegaPage = () => {
           }
           
           legaData = legheData as Lega;
+          
+          // Verifica se il link di invito è scaduto
+          setIsLinkScaduto(verificaScadenzaLink(legaData.ultimo_invito));
         }
         
         setLega(legaData);
@@ -154,6 +171,39 @@ const LegaPage = () => {
   const handleTornaLeghe = () => {
     navigate('/leghe');
   };
+  
+  const handleRigeneraLink = async () => {
+    if (!id || !isAdmin) return;
+    
+    try {
+      const { success, codiceInvito, ultimoInvito, error: regenerationError } = await rigeneraLinkInvito(id);
+      
+      if (!success || regenerationError) {
+        throw new Error('Errore nella rigenerazione del link');
+      }
+      
+      // Aggiorna la lega con il nuovo codice
+      setLega(prevLega => {
+        if (!prevLega) return null;
+        return {
+          ...prevLega,
+          codice_invito: codiceInvito,
+          ultimo_invito: ultimoInvito
+        };
+      });
+      
+      // Aggiorna lo stato di scadenza del link
+      setIsLinkScaduto(false);
+      
+      setSuccessMessage('Link di invito rigenerato con successo!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+    } catch (err) {
+      console.error('Errore nella rigenerazione del link:', err);
+      setError('Si è verificato un errore durante la rigenerazione del link di invito.');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
 
   if (loading) {
     return (
@@ -228,7 +278,10 @@ const LegaPage = () => {
             </button>
             
             {!lega.is_pubblica && (
-              <button className="lega-dettaglio-invita-button">
+              <button 
+                className="lega-dettaglio-invita-button"
+                onClick={() => setShowInvitoModal(true)}
+              >
                 Invita Giocatori
               </button>
             )}
@@ -280,6 +333,17 @@ const LegaPage = () => {
             </div>
           )}
         </div>
+        
+        {/* Modal per l'invito dei giocatori */}
+        <InvitoModal 
+          isOpen={showInvitoModal}
+          onClose={() => setShowInvitoModal(false)}
+          codiceLega={lega.codice_invito || ''}
+          nomeLega={lega.nome}
+          isLinkScaduto={isLinkScaduto}
+          ultimoInvito={lega.ultimo_invito || null}
+          onRigeneraLink={handleRigeneraLink}
+        />
       </div>
     </Layout>
   );

@@ -79,18 +79,19 @@ export type ProfileData = {
 };
 
 // Tipi per le leghe
-export type Lega = {
+export interface Lega {
   id: string;
   nome: string;
   descrizione?: string;
   is_pubblica: boolean;
   creato_da: string;
-  logo_url?: string;
   data_creazione: string;
   ultima_modifica: string;
-  codice_invito?: string;
   attiva: boolean;
-};
+  logo_url?: string;
+  codice_invito?: string;
+  ultimo_invito?: string | null;
+}
 
 export type GiocatoreLega = {
   id: string;
@@ -1159,6 +1160,63 @@ export const getGiocatoriLega = async (legaId: string) => {
     console.error('Errore nel recupero dei giocatori della lega:', error);
     return { giocatori: [], error };
   }
+};
+
+export const rigeneraLinkInvito = async (legaId: string) => {
+  try {
+    // Verifica che l'utente sia admin della lega
+    const { isAdmin, error: adminError } = await isLegaAdmin(legaId);
+    
+    if (!isAdmin || adminError) {
+      throw new Error('Non hai i permessi per rigenerare il link di invito per questa lega');
+    }
+    
+    // Genera un nuovo codice di invito
+    const nuovoCodice = generateRandomCode(8);
+    
+    // Aggiorna il codice invito della lega
+    // Il trigger aggiorna_ultimo_invito_trigger si occuperà di aggiornare ultimo_invito
+    const { data, error } = await supabase
+      .from('leghe')
+      .update({
+        codice_invito: nuovoCodice,
+        ultimo_invito: new Date().toISOString() // Aggiorniamo esplicitamente anche qui per sicurezza
+      })
+      .eq('id', legaId)
+      .select('codice_invito, ultimo_invito')
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    console.log('Link invito rigenerato con successo:', data);
+    
+    return { 
+      success: true, 
+      codiceInvito: data.codice_invito,
+      ultimoInvito: data.ultimo_invito,
+      error: null 
+    };
+  } catch (error) {
+    console.error('Errore nella rigenerazione del link di invito:', error);
+    return { 
+      success: false, 
+      codiceInvito: null,
+      ultimoInvito: null,
+      error 
+    };
+  }
+};
+
+// Funzione di utilità per generare un codice casuale
+const generateRandomCode = (length: number): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 };
 
 export default supabase;

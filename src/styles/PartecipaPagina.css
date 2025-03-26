@@ -1,0 +1,133 @@
+.partecipa-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.partecipa-titolo {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin-bottom: 2rem;
+}
+
+.partecipa-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.partecipa-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-top: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.partecipa-error {
+  background-color: #fff4f4;
+  padding: 2rem;
+  border-radius: 8px;
+  border-left: 5px solid #e74c3c;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.partecipa-error h2 {
+  color: #e74c3c;
+  margin-top: 0;
+}
+
+.partecipa-success {
+  background-color: #f0fff4;
+  padding: 2rem;
+  border-radius: 8px;
+  border-left: 5px solid #2ecc71;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.partecipa-success h2 {
+  color: #2ecc71;
+  margin-top: 0;
+}
+
+.partecipa-redirect {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: #666;
+  margin-top: 1.5rem;
+}
+
+.partecipa-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.partecipa-button:hover {
+  background-color: #2980b9;
+}
+
+@media (max-width: 600px) {
+  .partecipa-page {
+    padding: 1rem;
+  }
+  
+  .partecipa-error, 
+  .partecipa-success, 
+  .partecipa-loading {
+    padding: 1.5rem;
+  }
+}
+
+.partecipa-logs {
+  margin-top: 40px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.partecipa-logs h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.partecipa-logs pre {
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.partecipa-logs pre div {
+  padding: 2px 0;
+  border-bottom: 1px dashed #eee;
+} 
