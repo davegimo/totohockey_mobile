@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
-import { getClassifica, getLegheUtente, Lega } from '../services/supabase';
+import { getClassifica, getLegheUtente, Lega, rigeneraLinkInvito } from '../services/supabase';
+import InvitoModal from '../components/InvitoModal';
 import '../styles/LeghePage.css';
 
 // Tipo per gli elementi della classifica
@@ -22,7 +23,22 @@ const LeghePage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [posizioneUtente, setPosizioneUtente] = useState<number | null>(null);
   const [numGiocatori, setNumGiocatori] = useState<number>(0);
+  const [showInvitoModal, setShowInvitoModal] = useState(false);
+  const [currentLega, setCurrentLega] = useState<Lega | null>(null);
+  const [isLinkScaduto, setIsLinkScaduto] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Funzione per verificare se il link è scaduto
+  const verificaScadenzaLink = (ultimoInvito: string | null | undefined) => {
+    if (!ultimoInvito) return true;
+    
+    const dataUltimoInvito = new Date(ultimoInvito);
+    const now = new Date();
+    const diffInHours = (now.getTime() - dataUltimoInvito.getTime()) / (1000 * 60 * 60);
+    
+    return diffInHours > 12;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +143,54 @@ const LeghePage = () => {
     return 5; // Valore temporaneo
   };
 
+  // Funzione per aprire il modal di invito
+  const handleOpenInvitoModal = (lega: Lega) => {
+    setCurrentLega(lega);
+    setIsLinkScaduto(verificaScadenzaLink(lega.ultimo_invito));
+    setShowInvitoModal(true);
+  };
+
+  // Funzione per rigenerare il link di invito
+  const handleRigeneraLink = async () => {
+    if (!currentLega || !currentLega.id) return;
+    
+    try {
+      const { success, codiceInvito, ultimoInvito, error: regenerationError } = await rigeneraLinkInvito(currentLega.id);
+      
+      if (!success || regenerationError) {
+        throw new Error('Errore nella rigenerazione del link');
+      }
+      
+      // Aggiorna la lega corrente con il nuovo codice
+      setCurrentLega(prevLega => {
+        if (!prevLega) return null;
+        return {
+          ...prevLega,
+          codice_invito: codiceInvito,
+          ultimo_invito: ultimoInvito
+        };
+      });
+      
+      // Aggiorna anche la lega nell'array di leghe
+      setLeghe(prevLeghe => prevLeghe.map(lega => 
+        lega.id === currentLega.id 
+          ? { ...lega, codice_invito: codiceInvito, ultimo_invito: ultimoInvito }
+          : lega
+      ));
+      
+      // Aggiorna lo stato di scadenza del link
+      setIsLinkScaduto(false);
+      
+      setSuccessMessage('Link di invito rigenerato con successo!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      
+    } catch (err) {
+      console.error('Errore nella rigenerazione del link:', err);
+      setError('Si è verificato un errore durante la rigenerazione del link di invito.');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+
   return (
     <Layout>
       <div className="leghe-page">
@@ -144,6 +208,12 @@ const LeghePage = () => {
         {error && (
           <div className="leghe-error-message">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="leghe-success-message">
+            {successMessage}
           </div>
         )}
         
@@ -199,7 +269,10 @@ const LeghePage = () => {
                     </button>
                     
                     {!lega.is_pubblica && isLegaAdmin(lega) && (
-                      <button className="leghe-invita-button">
+                      <button 
+                        className="leghe-invita-button"
+                        onClick={() => handleOpenInvitoModal(lega)}
+                      >
                         Invita Giocatori
                       </button>
                     )}
@@ -208,6 +281,19 @@ const LeghePage = () => {
               ))
             )}
           </div>
+        )}
+
+        {/* Modal per l'invito dei giocatori */}
+        {currentLega && (
+          <InvitoModal 
+            isOpen={showInvitoModal}
+            onClose={() => setShowInvitoModal(false)}
+            codiceLega={currentLega.codice_invito || ''}
+            nomeLega={currentLega.nome}
+            isLinkScaduto={isLinkScaduto}
+            ultimoInvito={currentLega.ultimo_invito || null}
+            onRigeneraLink={handleRigeneraLink}
+          />
         )}
       </div>
     </Layout>
