@@ -21,7 +21,7 @@ const LegaPage = () => {
   const [isLinkScaduto, setIsLinkScaduto] = useState(false);
   
   // Funzione per verificare se il link è scaduto
-  const verificaScadenzaLink = (ultimoInvito: string | null) => {
+  const verificaScadenzaLink = (ultimoInvito: string | null | undefined) => {
     if (!ultimoInvito) return true;
     
     const dataUltimoInvito = new Date(ultimoInvito);
