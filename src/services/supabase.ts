@@ -91,6 +91,12 @@ export interface Lega {
   logo_url?: string;
   codice_invito?: string;
   ultimo_invito?: string | null;
+  link_scaduto?: boolean;
+  numero_partecipanti?: number;
+  profiles?: {
+    nome?: string;
+    cognome?: string;
+  };
 }
 
 export type GiocatoreLega = {
@@ -928,52 +934,27 @@ export const partecipaLegaConCodice = async (codiceInvito: string) => {
       throw new Error('Utente non autenticato');
     }
     
-    // Trova la lega corrispondente al codice di invito
-    const { data: legaData, error: legaError } = await supabase
-      .from('leghe')
-      .select('id, nome')
-      .eq('codice_invito', codiceInvito.toUpperCase())
-      .eq('attiva', true)
-      .single();
+    console.log('[partecipaLegaConCodice] Chiamata RPC per partecipa_lega_con_codice con codice:', codiceInvito);
     
-    if (legaError || !legaData) {
-      throw new Error('Codice di invito non valido o lega non attiva');
+    // Utilizziamo una funzione RPC con SECURITY DEFINER per bypassare RLS
+    const { data, error } = await supabase.rpc('partecipa_lega_con_codice', {
+      p_codice_invito: codiceInvito,
+      p_user_id: userData.user.id
+    });
+    
+    console.log('[partecipaLegaConCodice] Risposta dalla RPC:', data, error);
+    
+    if (error) {
+      console.error('[partecipaLegaConCodice] Errore nella chiamata RPC:', error);
+      throw error;
     }
     
-    // Controlla se l'utente è già nella lega
-    const { data: existingMember } = await supabase
-      .from('giocatori_leghe')
-      .select('id')
-      .eq('giocatore_id', userData.user.id)
-      .eq('lega_id', legaData.id)
-      .maybeSingle();
-    
-    if (existingMember) {
-      return { 
-        success: true, 
-        message: `Sei già un membro della lega ${legaData.nome}`,
-        lega: legaData 
-      };
+    if (!data) {
+      throw new Error('Si è verificato un errore durante la partecipazione alla lega');
     }
     
-    // Aggiungi l'utente alla lega
-    const { error: joinError } = await supabase
-      .from('giocatori_leghe')
-      .insert({
-        giocatore_id: userData.user.id,
-        lega_id: legaData.id,
-        is_admin: false
-      });
-    
-    if (joinError) {
-      throw joinError;
-    }
-    
-    return { 
-      success: true, 
-      message: `Sei entrato con successo nella lega ${legaData.nome}`,
-      lega: legaData 
-    };
+    // La funzione RPC restituisce un oggetto con i campi success, message e lega
+    return data;
   } catch (error) {
     console.error('Errore nell\'entrare nella lega:', error);
     return { 
@@ -1222,46 +1203,65 @@ const generateRandomCode = (length: number): string => {
 // Funzione per ottenere i dettagli di una lega dal codice di invito
 export const getLegaByInviteCode = async (codiceInvito: string) => {
   try {
+    console.log('[getLegaByInviteCode] Inizio ricerca lega con codice:', codiceInvito);
+    
     if (!codiceInvito) {
+      console.log('[getLegaByInviteCode] Codice mancante');
       return { lega: null, error: new Error('Codice invito non valido o mancante') };
     }
     
-    // Trova la lega corrispondente al codice di invito
-    const { data, error } = await supabase
-      .from('leghe')
-      .select('*, profiles(nome, cognome)')
-      .eq('codice_invito', codiceInvito.toUpperCase())
-      .eq('attiva', true)
-      .single();
+    // Chiamata diretta alla funzione RPC che bypasserà RLS
+    // Questa funzione deve essere creata nel database Supabase con SECURITY DEFINER
+    console.log('[getLegaByInviteCode] Chiamata RPC per cercaLegaPerCodice con codice:', codiceInvito);
+    
+    const { data, error } = await supabase.rpc('cerca_lega_per_codice', {
+      p_codice_invito: codiceInvito
+    });
+    
+    console.log('[getLegaByInviteCode] Risposta dalla RPC:', { data, error });
     
     if (error) {
+      console.error('[getLegaByInviteCode] Errore nella chiamata RPC:', error);
       return { lega: null, error };
     }
-
-    // Ottieni il numero di partecipanti
-    const { count, error: countError } = await supabase
-      .from('giocatori_leghe')
-      .select('*', { count: 'exact', head: true })
-      .eq('lega_id', data.id);
-      
-    if (countError) {
-      console.error('Errore nel conteggio dei partecipanti:', countError);
+    
+    if (!data) {
+      console.log('[getLegaByInviteCode] Nessuna lega trovata con questo codice');
+      return { lega: null, error: new Error('Codice invito non valido o lega non trovata') };
     }
+    
+    // Verifica se la lega non è attiva
+    if (data && !data.attiva) {
+      console.log('[getLegaByInviteCode] Lega trovata ma non attiva');
+      return { lega: null, error: new Error('La lega associata a questo codice non è più attiva') };
+    }
+
+    console.log('[getLegaByInviteCode] Dati lega trovati:', data);
     
     // Verifica se il link di invito è scaduto
     const isLinkScaduto = verificaScadenzaLink(data.ultimo_invito);
+    console.log('[getLegaByInviteCode] Stato scadenza link:', { 
+      ultimo_invito: data.ultimo_invito, 
+      scaduto: isLinkScaduto 
+    });
     
-    // Ritorna la lega con il conteggio dei partecipanti
+    // Costruisci l'oggetto lega completo con i dati già forniti dalla RPC
+    // Nota: la funzione RPC dovrebbe restituire già numero_partecipanti e profiles
+    const legaCompleta = { 
+      ...data,
+      numero_partecipanti: data.numero_partecipanti || 0,
+      link_scaduto: isLinkScaduto
+    };
+    
+    console.log('[getLegaByInviteCode] Oggetto lega completo restituito:', legaCompleta);
+    
+    // Ritorna la lega
     return { 
-      lega: { 
-        ...data as Lega, 
-        numero_partecipanti: count || 0,
-        link_scaduto: isLinkScaduto
-      }, 
+      lega: legaCompleta as Lega, 
       error: null 
     };
   } catch (error) {
-    console.error('Errore nel recupero della lega dal codice invito:', error);
+    console.error('[getLegaByInviteCode] Errore generale nella funzione:', error);
     return { lega: null, error };
   }
 };
@@ -1275,6 +1275,91 @@ export const verificaScadenzaLink = (ultimoInvito: string | null | undefined) =>
   const diffInHours = (now.getTime() - dataUltimoInvito.getTime()) / (1000 * 60 * 60);
   
   return diffInHours > 12; // Il link scade dopo 12 ore
+};
+
+// Funzione diagnostica per ottenere tutte le leghe e verificare i codici di invito
+export const verificaCodiciInvito = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('leghe')
+      .select('id, nome, codice_invito, attiva')
+      .order('nome');
+    
+    console.log('[verificaCodiciInvito] Tutte le leghe:', data);
+    
+    return { leghe: data || [], error };
+  } catch (error) {
+    console.error('[verificaCodiciInvito] Errore:', error);
+    return { leghe: [], error };
+  }
+};
+
+// Funzione diagnostica per verificare se una lega con un dato codice esiste
+export const verificaEsistenzaCodiceInvito = async (codice: string) => {
+  try {
+    console.log('[verificaEsistenzaCodiceInvito] Verifica codice:', codice);
+    
+    // Prima verifica con eq
+    const { data: dataEq, error: errorEq } = await supabase
+      .from('leghe')
+      .select('id, nome, codice_invito, attiva')
+      .eq('codice_invito', codice)
+      .limit(1);
+    
+    console.log('[verificaEsistenzaCodiceInvito] Risultato con eq:', { dataEq, errorEq });
+    
+    // Verifica con ilike per vedere se ci sono problemi di case
+    const { data: dataIlike, error: errorIlike } = await supabase
+      .from('leghe')
+      .select('id, nome, codice_invito, attiva')
+      .ilike('codice_invito', codice)
+      .limit(1);
+    
+    console.log('[verificaEsistenzaCodiceInvito] Risultato con ilike:', { dataIlike, errorIlike });
+    
+    // Cerca tutte le leghe e filtra manualmente per diagnostica
+    // Nota: questa parte è intenzionalmente senza filtri di autorizzazione
+    // perché vogliamo diagnosticare tutti i problemi possibili
+    const { data: allLeghe } = await supabase
+      .from('leghe')
+      .select('id, nome, codice_invito, attiva')
+      .order('nome');
+      
+    const matchManuale = allLeghe?.filter(l => 
+      l.codice_invito && 
+      (l.codice_invito.toLowerCase() === codice.toLowerCase())
+    );
+    
+    console.log('[verificaEsistenzaCodiceInvito] Filtro manuale:', matchManuale);
+    
+    // Aggiungiamo informazioni di debug aggiuntive
+    let debugInfo = null;
+    if (errorEq || errorIlike) {
+      debugInfo = {
+        errorEq: errorEq?.message || null,
+        errorIlike: errorIlike?.message || null,
+        statusEq: errorEq?.code || null,
+        statusIlike: errorIlike?.code || null
+      };
+    }
+    
+    return { 
+      match: {
+        eq: dataEq?.length ? dataEq[0] : null,
+        ilike: dataIlike?.length ? dataIlike[0] : null,
+        manuale: matchManuale?.length ? matchManuale[0] : null
+      },
+      debug: debugInfo,
+      error: errorEq || errorIlike
+    };
+  } catch (error) {
+    console.error('[verificaEsistenzaCodiceInvito] Errore:', error);
+    return { 
+      match: { eq: null, ilike: null, manuale: null }, 
+      debug: { error: error instanceof Error ? error.message : String(error) },
+      error 
+    };
+  }
 };
 
 export default supabase;

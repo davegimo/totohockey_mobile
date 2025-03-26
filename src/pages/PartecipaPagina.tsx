@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { partecipaLegaConCodice, getLegaByInviteCode } from '../services/supabase';
+import { 
+  partecipaLegaConCodice, 
+  getLegaByInviteCode, 
+  verificaEsistenzaCodiceInvito, 
+  verificaCodiciInvito 
+} from '../services/supabase';
 import '../styles/PartecipaPagina.css';
 
 // Tipo per i dettagli della lega
@@ -41,7 +46,10 @@ const PartecipaPagina: React.FC = () => {
 
   // Funzione per cercare la lega dato il codice di invito
   const cercaLega = async (codice: string) => {
+    console.log('[cercaLega] Inizio ricerca lega con codice:', codice);
+    
     if (!codice) {
+      console.log('[cercaLega] Codice mancante, mostrando errore');
       setError('Inserisci un codice di invito valido');
       return;
     }
@@ -51,23 +59,65 @@ const PartecipaPagina: React.FC = () => {
     setLegaDettagli(null);
     
     try {
+      console.log('[cercaLega] Chiamata a getLegaByInviteCode con codice:', codice);
       const { lega, error } = await getLegaByInviteCode(codice);
+      console.log('[cercaLega] Risposta da getLegaByInviteCode:', { lega, error });
       
       if (error || !lega) {
+        console.error('[cercaLega] Errore o lega non trovata:', error);
         setError('Codice di invito non valido o lega non trovata');
         return;
       }
       
       // Verifica se il link è scaduto
       if (lega.link_scaduto) {
+        console.log('[cercaLega] Link scaduto per la lega:', lega.nome);
         setError('Il link di invito è scaduto. Chiedi all\'amministratore della lega di generarne uno nuovo.');
         return;
       }
       
+      console.log('[cercaLega] Lega trovata con successo, impostazione stato:', lega);
       setLegaDettagli(lega as LegaDettagli);
     } catch (err) {
-      console.error('Errore nella ricerca della lega:', err);
+      console.error('[cercaLega] Eccezione durante la ricerca:', err);
       setError('Si è verificato un errore durante la ricerca della lega');
+    } finally {
+      console.log('[cercaLega] Ricerca completata, fine stato di caricamento');
+      setCercaLegaInCorso(false);
+    }
+  };
+
+  const verificaDiagnostica = async () => {
+    if (!codiceInvito) {
+      setError('Inserisci un codice di invito per la verifica diagnostica');
+      return;
+    }
+
+    console.log('[verificaDiagnostica] Avvio verifica per codice:', codiceInvito);
+    setCercaLegaInCorso(true);
+    
+    try {
+      // Verifica manualmente tutte le leghe
+      const { leghe } = await verificaCodiciInvito();
+      console.log('[verificaDiagnostica] Elenco leghe disponibili:', leghe);
+      
+      // Verifica con funzione specializzata
+      const { match, debug, error } = await verificaEsistenzaCodiceInvito(codiceInvito);
+      console.log('[verificaDiagnostica] Risultato verifica codice:', { match, debug, error });
+      
+      if (match.eq || match.ilike || match.manuale) {
+        setError(`Diagnostica: lega trovata ma non accessibile. 
+          Match esatto: ${match.eq ? 'Sì' : 'No'}, 
+          Match case-insensitive: ${match.ilike ? 'Sì' : 'No'}, 
+          Match manuale: ${match.manuale ? 'Sì' : 'No'}
+          ${debug ? 'Dettagli errore: ' + JSON.stringify(debug) : ''}`);
+      } else {
+        setError(`Diagnostica: nessuna lega trovata con codice ${codiceInvito}. Verifica codice o contatta l'amministratore.
+          ${debug ? 'Dettagli errore: ' + JSON.stringify(debug) : ''}`);
+      }
+    } catch (err) {
+      console.error('[verificaDiagnostica] Errore:', err);
+      setError('Errore durante la verifica diagnostica');
     } finally {
       setCercaLegaInCorso(false);
     }
@@ -186,6 +236,19 @@ const PartecipaPagina: React.FC = () => {
                     {cercaLegaInCorso ? 'Ricerca...' : 'Cerca'}
                   </button>
                 </div>
+              </div>
+
+              {/* Aggiungiamo un pulsante per la diagnostica */}
+              <div className="partecipa-diagnostic">
+                <button 
+                  type="button"
+                  className="partecipa-diagnostic-button"
+                  onClick={verificaDiagnostica}
+                  disabled={cercaLegaInCorso || !codiceInvito}
+                >
+                  Verifica diagnostica
+                </button>
+                <small>Se riscontri problemi, usa questo pulsante per verificare il codice.</small>
               </div>
             </form>
             
