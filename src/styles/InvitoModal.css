@@ -48,6 +48,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
+  flex-direction: column;
 }
 
 .invito-modal-link-input {
@@ -57,10 +58,16 @@
   font-size: 14px;
   color: #333;
   background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
 }
 
 .invito-modal-link-input:focus {
   outline: none;
+}
+
+.invito-modal-actions {
+  display: flex;
+  width: 100%;
 }
 
 .invito-modal-scaduto {
@@ -101,10 +108,28 @@
   background-color: #0074E4;
   color: white;
   min-width: 80px;
+  flex: 1;
+  border-radius: 0;
+}
+
+.invito-modal-button.whatsapp {
+  background-color: #25D366;
+  color: white;
+  min-width: 80px;
+  flex: 1;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 
 .invito-modal-button.copia:hover {
   background-color: #0062c1;
+}
+
+.invito-modal-button.whatsapp:hover {
+  background-color: #1fba57;
 }
 
 .invito-modal-button.rigenera {
@@ -215,16 +240,24 @@
     max-height: calc(100vh - 20px);
   }
   
-  .invito-modal-link-container {
-    flex-direction: column;
-  }
-  
   .invito-modal-link-input {
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .invito-modal-button.copia {
-    width: 100%;
     padding: 12px;
   }
+  
+  .invito-modal-button.copia,
+  .invito-modal-button.whatsapp {
+    padding: 12px;
+  }
+}
+
+/* Icona WhatsApp */
+@font-face {
+  font-family: 'WhatsAppIcon';
+  src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/webfonts/fa-brands-400.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.whatsapp-icon {
+  margin-right: 2px;
 } 
