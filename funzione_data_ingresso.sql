@@ -1,0 +1,1 @@
+CREATE OR REPLACE FUNCTION public.get_data_ingresso_giocatore(p_giocatore_id UUID, p_lega_id UUID) RETURNS JSON LANGUAGE plpgsql SECURITY DEFINER AS $$ DECLARE result_data JSON; BEGIN SELECT json_build_object('data_ingresso', gl.data_ingresso) INTO result_data FROM giocatori_leghe gl WHERE gl.giocatore_id = p_giocatore_id AND gl.lega_id = p_lega_id; RETURN result_data; END; $$;

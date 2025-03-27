@@ -295,7 +295,13 @@ const LegaPage = () => {
                     <tr key={item.id} className={item.is_admin ? 'lega-dettaglio-admin-row' : ''}>
                       <td className="lega-dettaglio-position-col">{item.posizione}</td>
                       <td className="lega-dettaglio-player-col">
-                        <span className="lega-dettaglio-player-name">{item.nome} {item.cognome}</span>
+                        <span 
+                          className="lega-dettaglio-player-name"
+                          onClick={() => navigate(`/giocatore/${item.giocatore_id}?lega_id=${id}`)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          {item.nome} {item.cognome}
+                        </span>
                         {item.is_admin && (
                           <span className="lega-dettaglio-admin-badge" title="Amministratore">👑</span>
                         )}

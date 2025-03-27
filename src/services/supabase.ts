@@ -395,24 +395,43 @@ export const getPronosticiWithDetails = async (userId: string) => {
     }
     
     // Assicuriamoci che il campo campionato sia sempre definito
-    const pronosticiConCampionato = data?.map(pronostico => ({
-      ...pronostico,
-      partita: {
-        ...pronostico.partita,
-        campionato: pronostico.partita.campionato || 'Elite Maschile'
+    const pronosticiConCampionato = data?.map(pronostico => {
+      // Verifica che l'oggetto partita esista prima di accedere alle sue proprietà
+      if (!pronostico.partita) {
+        console.warn('Pronostico senza partita valida trovato:', pronostico.id);
+        return null; // Escluderemo questo pronostico dai risultati
       }
-    }));
+      
+      return {
+        ...pronostico,
+        partita: {
+          ...pronostico.partita,
+          campionato: pronostico.partita.campionato || 'Elite Maschile'
+        }
+      };
+    }).filter(Boolean); // Rimuove gli elementi null
     
     // Organizziamo i pronostici per turno
     const pronosticiPerTurno: Record<string, any[]> = {};
     
     pronosticiConCampionato?.forEach(pronostico => {
+      // Verifica che l'oggetto partita e turno esistano prima di accedere alle proprietà
+      if (!pronostico.partita || !pronostico.partita.turno) {
+        console.warn('Pronostico con struttura incompleta trovato:', pronostico.id);
+        return; // Salta questo pronostico
+      }
+      
       const turnoId = pronostico.partita.turno.id;
       if (!pronosticiPerTurno[turnoId]) {
         pronosticiPerTurno[turnoId] = [];
       }
       pronosticiPerTurno[turnoId].push(pronostico);
     });
+    
+    // Se non ci sono pronostici validi, restituisci un array vuoto
+    if (Object.keys(pronosticiPerTurno).length === 0) {
+      return { turniConPronostici: [], error: null };
+    }
     
     // Convertiamo l'oggetto in un array ordinato per data_limite del turno (decrescente)
     const turniConPronostici = Object.entries(pronosticiPerTurno).map(([, pronostici]) => {
@@ -1388,6 +1407,113 @@ export const ricalcolaPunteggiLega = async (legaId: string) => {
   } catch (error) {
     console.error('Errore durante il ricalcolo dei punteggi:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Errore sconosciuto' };
+  }
+};
+
+// Funzione per recuperare i pronostici di un giocatore in una lega specifica
+export const getPronosticiWithDetailsInLega = async (userId: string, legaId: string) => {
+  try {
+    console.log('Recupero pronostici con dettagli per utente:', userId, 'in lega:', legaId);
+    
+    // Utilizziamo una funzione RPC per ottenere la data di ingresso del giocatore
+    // in modo da bypassare le RLS policy
+    const { data: dataIngresso, error: dataIngressoError } = await supabase.rpc('get_data_ingresso_giocatore', {
+      p_giocatore_id: userId,
+      p_lega_id: legaId
+    });
+    
+    if (dataIngressoError) {
+      console.error('Errore durante il recupero della data di ingresso nella lega:', dataIngressoError);
+      return { turniConPronostici: [], error: dataIngressoError };
+    }
+    
+    if (!dataIngresso || !dataIngresso.data_ingresso) {
+      console.error('Data di ingresso non trovata. Il giocatore potrebbe non essere membro della lega.');
+      return { turniConPronostici: [], error: new Error('Giocatore non membro della lega') };
+    }
+    
+    const dataIngressoStr = dataIngresso.data_ingresso;
+    
+    // Recuperiamo i pronostici con i dettagli delle partite
+    const { data, error } = await supabase
+      .from('pronostici')
+      .select(`
+        *,
+        partita:partita_id(
+          id,
+          data,
+          risultato_casa,
+          risultato_ospite,
+          campionato,
+          squadra_casa:squadra_casa_id(id, nome, logo_url),
+          squadra_ospite:squadra_ospite_id(id, nome, logo_url),
+          turno:turno_id(id, descrizione, data_limite)
+        )
+      `)
+      .eq('user_id', userId)
+      .gte('partita.data', dataIngressoStr); // Filtra solo le partite dopo la data di ingresso
+    
+    if (error) {
+      console.error('Errore durante il recupero dei pronostici:', error);
+      return { pronosticiConDettagli: [], error };
+    }
+    
+    // Assicuriamoci che il campo campionato sia sempre definito
+    const pronosticiConCampionato = data?.map(pronostico => {
+      // Verifica che l'oggetto partita esista prima di accedere alle sue proprietà
+      if (!pronostico.partita) {
+        console.warn('Pronostico senza partita valida trovato:', pronostico.id);
+        return null; // Escluderemo questo pronostico dai risultati
+      }
+      
+      return {
+        ...pronostico,
+        partita: {
+          ...pronostico.partita,
+          campionato: pronostico.partita.campionato || 'Elite Maschile'
+        }
+      };
+    }).filter(Boolean); // Rimuove gli elementi null
+    
+    // Organizziamo i pronostici per turno
+    const pronosticiPerTurno: Record<string, any[]> = {};
+    
+    pronosticiConCampionato?.forEach(pronostico => {
+      // Verifica che l'oggetto partita e turno esistano prima di accedere alle proprietà
+      if (!pronostico.partita || !pronostico.partita.turno) {
+        console.warn('Pronostico con struttura incompleta trovato:', pronostico.id);
+        return; // Salta questo pronostico
+      }
+      
+      const turnoId = pronostico.partita.turno.id;
+      if (!pronosticiPerTurno[turnoId]) {
+        pronosticiPerTurno[turnoId] = [];
+      }
+      pronosticiPerTurno[turnoId].push(pronostico);
+    });
+    
+    // Se non ci sono pronostici validi, restituisci un array vuoto
+    if (Object.keys(pronosticiPerTurno).length === 0) {
+      return { turniConPronostici: [], error: null };
+    }
+    
+    // Convertiamo l'oggetto in un array ordinato per data_limite del turno (decrescente)
+    const turniConPronostici = Object.entries(pronosticiPerTurno).map(([, pronostici]) => {
+      const turno = pronostici[0].partita.turno;
+      return {
+        turno,
+        pronostici
+      };
+    }).sort((a, b) => {
+      const dataA = new Date(a.turno.data_limite).getTime();
+      const dataB = new Date(b.turno.data_limite).getTime();
+      return dataB - dataA; // Ordine decrescente
+    });
+    
+    return { turniConPronostici, error: null };
+  } catch (error) {
+    console.error('Errore durante l\'elaborazione dei pronostici:', error);
+    return { turniConPronostici: [], error };
   }
 };
 

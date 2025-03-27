@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getPronosticiWithDetails, getGiocatoreById } from '../services/supabase';
+import { getPronosticiWithDetails, getGiocatoreById, getPronosticiWithDetailsInLega, getLegaById } from '../services/supabase';
 import { ProfileData } from '../services/supabase';
 import '../styles/GiocatorePage.css';
 
@@ -47,10 +47,13 @@ type TurnoConPronostici = {
 
 const GiocatorePage = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState<ProfileData | null>(null);
   const [turniConPronostici, setTurniConPronostici] = useState<TurnoConPronostici[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [legaInfo, setLegaInfo] = useState<{ id: string, nome: string } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,46 +75,108 @@ const GiocatorePage = () => {
         
         setUser(user);
         
-        // Recupera i pronostici dell'utente
-        const { turniConPronostici, error: pronosticiError } = await getPronosticiWithDetails(id);
+        // Controlla se c'è un parametro lega_id nella query string
+        const params = new URLSearchParams(location.search);
+        const legaId = params.get('lega_id');
         
-        if (pronosticiError) {
-          throw new Error('Errore durante il recupero dei pronostici');
+        if (legaId) {
+          // Recupera le informazioni della lega
+          const { lega, error: legaError } = await getLegaById(legaId);
+          if (legaError) {
+            console.error('Errore nel recupero della lega:', legaError);
+            // Continuiamo comunque, mostriamo solo un avviso
+          } else if (lega) {
+            setLegaInfo({ id: lega.id, nome: lega.nome });
+          }
+          
+          try {
+            // Recupera i pronostici dell'utente per la lega specifica
+            const { turniConPronostici, error: pronosticiError } = await getPronosticiWithDetailsInLega(id, legaId);
+            
+            if (pronosticiError) {
+              console.error('Errore durante il recupero dei pronostici della lega:', pronosticiError);
+              
+              // Gestione errori specifici
+              if (pronosticiError instanceof Error && pronosticiError.message.includes('Giocatore non membro della lega')) {
+                throw new Error('Il giocatore non è membro di questa lega o si è unito recentemente');
+              } else if (pronosticiError instanceof Error && pronosticiError.message.includes('permission denied')) {
+                throw new Error('Non hai i permessi per visualizzare questi pronostici');
+              } else {
+                throw new Error('Impossibile recuperare i pronostici di questa lega');
+              }
+            }
+            
+            // Se non ci sono pronostici disponibili, mostriamo la pagina vuota
+            if (!turniConPronostici || turniConPronostici.length === 0) {
+              console.log('Nessun pronostico trovato per questa lega');
+              setTurniConPronostici([]);
+            } else {
+              console.log('Pronostici recuperati per la lega:', turniConPronostici);
+              
+              // Filtra i pronostici per mostrare solo quelli con risultati definitivi
+              const turniConPronosticiFiltrati = turniConPronostici.map(turno => {
+                return {
+                  ...turno,
+                  pronostici: turno.pronostici.filter(pronostico => 
+                    pronostico.partita && 
+                    pronostico.partita.risultato_casa !== null && 
+                    pronostico.partita.risultato_ospite !== null
+                  )
+                };
+              }).filter(turno => turno.pronostici.length > 0);
+              
+              setTurniConPronostici(turniConPronosticiFiltrati);
+            }
+          } catch (err: any) {
+            console.error('Errore durante il recupero dei pronostici della lega:', err);
+            setError(err.message || 'Si è verificato un errore nel recupero dei pronostici di questa lega. Prova a tornare indietro.');
+          }
+        } else {
+          try {
+            // Recupera tutti i pronostici dell'utente (comportamento originale)
+            const { turniConPronostici, error: pronosticiError } = await getPronosticiWithDetails(id);
+            
+            if (pronosticiError) {
+              console.error('Errore durante il recupero dei pronostici generali:', pronosticiError);
+              throw new Error('Impossibile recuperare i pronostici');
+            }
+            
+            if (!turniConPronostici || turniConPronostici.length === 0) {
+              console.log('Nessun pronostico trovato');
+              setTurniConPronostici([]);
+            } else {
+              console.log('Pronostici recuperati:', turniConPronostici);
+              
+              // Filtra i pronostici per mostrare solo quelli con risultati definitivi
+              const turniConPronosticiFiltrati = turniConPronostici.map(turno => {
+                return {
+                  ...turno,
+                  pronostici: turno.pronostici.filter(pronostico => 
+                    pronostico.partita && 
+                    pronostico.partita.risultato_casa !== null && 
+                    pronostico.partita.risultato_ospite !== null
+                  )
+                };
+              }).filter(turno => turno.pronostici.length > 0);
+              
+              setTurniConPronostici(turniConPronosticiFiltrati);
+            }
+          } catch (err) {
+            console.error('Errore durante il recupero dei pronostici generali:', err);
+            setError('Si è verificato un errore nel recupero dei pronostici. Riprova più tardi.');
+          }
         }
         
-        console.log('Pronostici recuperati:', turniConPronostici);
-        
-        // Filtra i pronostici per mostrare solo quelli con risultati definitivi
-        const turniConPronosticiFiltrati = turniConPronostici?.map(turno => {
-          return {
-            ...turno,
-            pronostici: turno.pronostici.filter(pronostico => 
-              pronostico.partita.risultato_casa !== null && 
-              pronostico.partita.risultato_ospite !== null
-            )
-          };
-        }).filter(turno => turno.pronostici.length > 0) || [];
-        
-        // Verifica i valori del campionato
-        if (turniConPronosticiFiltrati && turniConPronosticiFiltrati.length > 0) {
-          turniConPronosticiFiltrati.forEach(turno => {
-            turno.pronostici.forEach(pronostico => {
-              console.log('Campionato partita:', pronostico.partita.campionato);
-            });
-          });
-        }
-        
-        setTurniConPronostici(turniConPronosticiFiltrati);
         setLoading(false);
       } catch (err: any) {
-        console.error('Errore:', err);
+        console.error('Errore generale:', err);
         setError(err.message || 'Si è verificato un errore. Riprova più tardi.');
         setLoading(false);
       }
     };
     
     fetchData();
-  }, [id]);
+  }, [id, location.search]);
 
   const formatData = (dataString: string) => {
     const data = new Date(dataString);
@@ -145,6 +210,14 @@ const GiocatorePage = () => {
         ) : (
           <>
             <div className="giocatore-header">
+              {legaInfo && (
+                <button 
+                  className="giocatore-torna-button" 
+                  onClick={() => navigate(`/leghe/${legaInfo.id}`)}
+                >
+                  &larr; Torna alla lega {legaInfo.nome}
+                </button>
+              )}
               <h1>{user?.nome} {user?.cognome}</h1>
               <div className="giocatore-stats">
                 <div className="giocatore-punteggio">

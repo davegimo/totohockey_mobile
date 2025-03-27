@@ -325,6 +325,24 @@
   background-color: rgba(156, 39, 176, 0.1);
 }
 
+.giocatore-torna-button {
+  background: transparent;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s;
+}
+
+.giocatore-torna-button:hover {
+  color: var(--primary-dark-color);
+  text-decoration: underline;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .giocatore-header {
