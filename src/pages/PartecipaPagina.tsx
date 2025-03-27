@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { 
   partecipaLegaConCodice, 
   getLegaByInviteCode
 } from '../services/supabase';
+import { useSession } from '../context/SessionContext';
 import '../styles/PartecipaPagina.css';
 
 // Tipo per i dettagli della lega
@@ -26,6 +27,8 @@ type LegaDettagli = {
 const PartecipaPagina: React.FC = () => {
   const { codiceInvito: urlCodiceInvito } = useParams<{ codiceInvito?: string }>();
   const navigate = useNavigate();
+  const { session } = useSession();
+  const isLoggedIn = !!session;
   const [loading, setLoading] = useState(false);
   const [codiceInvito, setCodiceInvito] = useState(urlCodiceInvito || '');
   const [legaDettagli, setLegaDettagli] = useState<LegaDettagli | null>(null);
@@ -173,7 +176,111 @@ const PartecipaPagina: React.FC = () => {
           </button>
         </div>
         
-        {!success ? (
+        {!isLoggedIn && legaDettagli ? (
+          <div className="partecipa-not-logged-in">
+            <div className="partecipa-lega-card">
+              <div className="partecipa-lega-header">
+                <h2 className="partecipa-lega-nome">{legaDettagli.nome}</h2>
+                {legaDettagli.logo_url && (
+                  <div className="partecipa-lega-logo">
+                    <img src={legaDettagli.logo_url} alt={`Logo ${legaDettagli.nome}`} />
+                  </div>
+                )}
+              </div>
+              
+              <div className="partecipa-lega-info">
+                <p className="partecipa-lega-descrizione">
+                  {legaDettagli.descrizione || 'Nessuna descrizione disponibile'}
+                </p>
+                
+                <div className="partecipa-lega-details">
+                  <div className="partecipa-lega-detail">
+                    <span className="partecipa-detail-label">Creata da:</span>
+                    <span className="partecipa-detail-value">
+                      {legaDettagli.profiles 
+                        ? `${legaDettagli.profiles.nome} ${legaDettagli.profiles.cognome}`
+                        : 'Admin'}
+                    </span>
+                  </div>
+                  
+                  <div className="partecipa-lega-detail">
+                    <span className="partecipa-detail-label">Data creazione:</span>
+                    <span className="partecipa-detail-value">
+                      {formatDate(legaDettagli.data_creazione)}
+                    </span>
+                  </div>
+                  
+                  <div className="partecipa-lega-detail">
+                    <span className="partecipa-detail-label">Partecipanti:</span>
+                    <span className="partecipa-detail-value">
+                      {legaDettagli.numero_partecipanti}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="partecipa-auth-message">
+                  <p>Per partecipare a questa lega, devi effettuare l'accesso o registrarti:</p>
+                  <div className="partecipa-auth-buttons">
+                    <Link to="/login" className="partecipa-auth-button login">
+                      Accedi
+                    </Link>
+                    <Link to="/register" className="partecipa-auth-button register">
+                      Registrati
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : !isLoggedIn && !legaDettagli ? (
+          <div className="partecipa-not-logged-in">
+            <div className="partecipa-form-container">
+              <form onSubmit={handleSubmit} className="partecipa-form">
+                <div className="partecipa-form-group">
+                  <label htmlFor="codiceInvito" className="partecipa-label">
+                    Inserisci il codice di invito:
+                  </label>
+                  <div className="partecipa-input-group">
+                    <input
+                      type="text"
+                      id="codiceInvito"
+                      className="partecipa-input"
+                      value={codiceInvito}
+                      onChange={(e) => setCodiceInvito(e.target.value.trim().toUpperCase())}
+                      placeholder="Es. ABCD1234"
+                      autoComplete="off"
+                    />
+                    <button 
+                      type="submit" 
+                      className="partecipa-cerca-button"
+                      disabled={cercaLegaInCorso}
+                    >
+                      {cercaLegaInCorso ? 'Ricerca...' : 'Cerca'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+              
+              {error && (
+                <div className="partecipa-error-message">
+                  <p>{error}</p>
+                </div>
+              )}
+              
+              <div className="partecipa-auth-message">
+                <p>Per partecipare a una lega, devi effettuare l'accesso o registrarti:</p>
+                <div className="partecipa-auth-buttons">
+                  <Link to="/login" className="partecipa-auth-button login">
+                    Accedi
+                  </Link>
+                  <Link to="/register" className="partecipa-auth-button register">
+                    Registrati
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : !success ? (
           <div className="partecipa-form-container">
             <form onSubmit={handleSubmit} className="partecipa-form">
               <div className="partecipa-form-group">
