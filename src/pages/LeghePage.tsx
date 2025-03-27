@@ -185,6 +185,10 @@ const LeghePage = () => {
       <div className="leghe-page">
         <h1 className="leghe-pagina-titolo">Le Mie Leghe</h1>
         
+        <div className="leghe-info-message">
+          <strong>Importante!</strong> Quando partecipi ad una lega privata, metti in conto che verranno contati gli esiti di tutte le partite pronosticate a partire dal tuo ingresso! Se non vedi alcune partite il motivo è questo!
+        </div>
+        
         <div className="leghe-crea-container">
           <button 
             className="leghe-crea-button"
