@@ -132,17 +132,6 @@ const LeghePage = () => {
     </span>
   );
 
-  // Determina il numero di partecipanti da mostrare per ogni lega
-  const getNumeroPartecipanti = (lega: Lega) => {
-    if (lega.is_pubblica) {
-      return numGiocatori;
-    }
-    
-    // Per le leghe private, per ora mostriamo un valore fisso
-    // In futuro, questo dato proverrà dal database
-    return 5; // Valore temporaneo
-  };
-
   // Funzione per aprire il modal di invito
   const handleOpenInvitoModal = (lega: Lega) => {
     setCurrentLega(lega);
@@ -248,22 +237,26 @@ const LeghePage = () => {
                   )}
                   
                   <div className="leghe-card-info">
-                    {lega.is_pubblica && posizioneUtente ? (
-                      <div className="lega-posizione">
-                        <span className="leghe-info-label">La tua posizione:</span> 
-                        {posizioneUtente === 0 ? 'Non classificato' : `${posizioneUtente}° posto`}
-                      </div>
-                    ) : (
-                      <div className="lega-posizione">
-                        <span className="leghe-info-label">La tua posizione:</span> 
-                        Classifica in arrivo
-                      </div>
+                    {lega.is_pubblica && (
+                      <>
+                        {posizioneUtente ? (
+                          <div className="lega-posizione">
+                            <span className="leghe-info-label">La tua posizione:</span> 
+                            {posizioneUtente === 0 ? 'Non classificato' : `${posizioneUtente}° posto`}
+                          </div>
+                        ) : (
+                          <div className="lega-posizione">
+                            <span className="leghe-info-label">La tua posizione:</span> 
+                            Classifica in arrivo
+                          </div>
+                        )}
+                        
+                        <div className="lega-partecipanti">
+                          <span className="leghe-info-label">Partecipanti:</span> 
+                          {numGiocatori}
+                        </div>
+                      </>
                     )}
-                    
-                    <div className="lega-partecipanti">
-                      <span className="leghe-info-label">Partecipanti:</span> 
-                      {getNumeroPartecipanti(lega)}
-                    </div>
                   </div>
                   
                   <div className="leghe-card-actions">
