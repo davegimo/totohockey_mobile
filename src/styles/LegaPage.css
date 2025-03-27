@@ -242,6 +242,10 @@
   text-align: center;
 }
 
+.header-short {
+  display: none;
+}
+
 .lega-dettaglio-player-name {
   display: inline-block;
   margin-right: 0.5rem;
@@ -273,10 +277,23 @@
   
   .lega-dettaglio-classifica-table th,
   .lega-dettaglio-classifica-table td {
-    padding: 0.5rem;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.9rem;
   }
   
   .lega-dettaglio-results-col, .lega-dettaglio-outcomes-col {
+    width: 40px;
+  }
+  
+  .header-full {
     display: none;
+  }
+  
+  .header-short {
+    display: inline;
+  }
+  
+  .lega-dettaglio-player-col {
+    min-width: 120px;
   }
 } 

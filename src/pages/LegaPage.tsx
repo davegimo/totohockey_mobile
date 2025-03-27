@@ -286,8 +286,14 @@ const LegaPage = () => {
                     <th className="lega-dettaglio-position-col">Pos.</th>
                     <th className="lega-dettaglio-player-col">Giocatore</th>
                     <th className="lega-dettaglio-points-col">Punti</th>
-                    <th className="lega-dettaglio-results-col">Ris. Esatti</th>
-                    <th className="lega-dettaglio-outcomes-col">Esiti</th>
+                    <th className="lega-dettaglio-results-col">
+                      <span className="header-full">Ris. Esatti</span>
+                      <span className="header-short">R</span>
+                    </th>
+                    <th className="lega-dettaglio-outcomes-col">
+                      <span className="header-full">Esiti</span>
+                      <span className="header-short">E</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -307,8 +313,12 @@ const LegaPage = () => {
                         )}
                       </td>
                       <td className="lega-dettaglio-points-col">{item.punti_totali}</td>
-                      <td className="lega-dettaglio-results-col">{item.risultati_esatti}</td>
-                      <td className="lega-dettaglio-outcomes-col">{item.esiti_presi}</td>
+                      <td className="lega-dettaglio-results-col">
+                        <span className="data-value">{item.risultati_esatti}</span>
+                      </td>
+                      <td className="lega-dettaglio-outcomes-col">
+                        <span className="data-value">{item.esiti_presi}</span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
