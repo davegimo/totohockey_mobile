@@ -505,6 +505,39 @@ export const getGiocatoreById = async (userId: string) => {
   }
 };
 
+// Nuova funzione per recuperare i dati del giocatore specifici di una lega
+export const getGiocatoreByIdInLega = async (userId: string, legaId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('vista_classifica_leghe')
+      .select('giocatore_id, nome, cognome, punti_totali, risultati_esatti, esiti_presi')
+      .eq('giocatore_id', userId)
+      .eq('lega_id', legaId)
+      .single();
+    
+    if (error) {
+      console.error('Errore durante il recupero del profilo giocatore nella lega:', error);
+      return { user: null, error };
+    }
+    
+    // Convertiamo il formato per mantenere la compatibilità con ProfileData
+    const user: ProfileData = {
+      id: data.giocatore_id,
+      nome: data.nome,
+      cognome: data.cognome,
+      email: '', // Non abbiamo questa info dalla vista delle leghe
+      punteggio: data.punti_totali,
+      risultati_esatti: data.risultati_esatti,
+      esiti_presi: data.esiti_presi
+    };
+    
+    return { user, error: null };
+  } catch (error) {
+    console.error('Errore durante il recupero del profilo giocatore nella lega:', error);
+    return { user: null, error };
+  }
+};
+
 export const savePronostico = async (pronostico: {
   user_id: string;
   partita_id: string;

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getPronosticiWithDetails, getGiocatoreById, getPronosticiWithDetailsInLega, getLegaById } from '../services/supabase';
+import { getPronosticiWithDetails, getGiocatoreById, getPronosticiWithDetailsInLega, getLegaById, getGiocatoreByIdInLega } from '../services/supabase';
 import { ProfileData } from '../services/supabase';
 import '../styles/GiocatorePage.css';
 
@@ -62,22 +62,11 @@ const GiocatorePage = () => {
       try {
         setLoading(true);
         
-        // Recupera i dati dell'utente dalla vista vista_giocatori
-        const { user, error: userError } = await getGiocatoreById(id);
-        
-        if (userError) {
-          throw new Error('Errore durante il recupero dei dati dell\'utente');
-        }
-        
-        if (!user) {
-          throw new Error('Utente non trovato');
-        }
-        
-        setUser(user);
-        
         // Controlla se c'è un parametro lega_id nella query string
         const params = new URLSearchParams(location.search);
         const legaId = params.get('lega_id');
+        
+        let userData: ProfileData | null = null;
         
         if (legaId) {
           // Recupera le informazioni della lega
@@ -87,6 +76,23 @@ const GiocatorePage = () => {
             // Continuiamo comunque, mostriamo solo un avviso
           } else if (lega) {
             setLegaInfo({ id: lega.id, nome: lega.nome });
+            
+            // Recupera i dati del giocatore specifici per la lega
+            const { user: userInLega, error: userLeagueError } = await getGiocatoreByIdInLega(id, legaId);
+            
+            if (userLeagueError) {
+              console.error('Errore durante il recupero dei dati del giocatore nella lega:', userLeagueError);
+              // Fallback alla vista generale
+              const { user: generalUser, error: userError } = await getGiocatoreById(id);
+              
+              if (userError || !generalUser) {
+                throw new Error('Errore durante il recupero dei dati dell\'utente');
+              }
+              
+              userData = generalUser;
+            } else {
+              userData = userInLega;
+            }
           }
           
           try {
@@ -132,6 +138,19 @@ const GiocatorePage = () => {
             setError(err.message || 'Si è verificato un errore nel recupero dei pronostici di questa lega. Prova a tornare indietro.');
           }
         } else {
+          // Se non c'è parametro lega_id, recupera i dati dell'utente dalla vista vista_giocatori generale
+          const { user: generalUser, error: userError } = await getGiocatoreById(id);
+          
+          if (userError) {
+            throw new Error('Errore durante il recupero dei dati dell\'utente');
+          }
+          
+          if (!generalUser) {
+            throw new Error('Utente non trovato');
+          }
+          
+          userData = generalUser;
+          
           try {
             // Recupera tutti i pronostici dell'utente (comportamento originale)
             const { turniConPronostici, error: pronosticiError } = await getPronosticiWithDetails(id);
@@ -167,6 +186,8 @@ const GiocatorePage = () => {
           }
         }
         
+        // Imposta i dati dell'utente
+        setUser(userData);
         setLoading(false);
       } catch (err: any) {
         console.error('Errore generale:', err);
