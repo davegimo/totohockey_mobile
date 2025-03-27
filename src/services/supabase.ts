@@ -1374,20 +1374,20 @@ export const ricalcolaPunteggiLega = async (legaId: string) => {
     }
     
     // Chiama la funzione RPC del database per ricalcolare i punteggi
-    const { data, error } = await supabase.rpc('ricalcola_punteggi_lega', {
+    const { error } = await supabase.rpc('ricalcola_punteggi_lega', {
       p_lega_id: legaId
     });
     
     if (error) {
       console.error('Errore durante il ricalcolo dei punteggi:', error);
-      return { success: false, error };
+      return { success: false, error: error.message };
     }
     
     console.log('Ricalcolo punteggi completato con successo');
     return { success: true, error: null };
   } catch (error) {
     console.error('Errore durante il ricalcolo dei punteggi:', error);
-    return { success: false, error };
+    return { success: false, error: error instanceof Error ? error.message : 'Errore sconosciuto' };
   }
 };
 

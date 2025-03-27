@@ -139,7 +139,7 @@ const LegaPage = () => {
       
     } catch (err) {
       console.error('Errore durante il ricalcolo della classifica:', err);
-      setError('Si è verificato un errore durante il ricalcolo della classifica.');
+      setError(err instanceof Error ? err.message : 'Si è verificato un errore durante il ricalcolo della classifica.');
     } finally {
       setLoadingRicalcolo(false);
     }
