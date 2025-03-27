@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import supabase from '../services/supabase';
 import { Partita, Pronostico, getPartite, savePronostico, User, getUltimoTurno, Turno } from '../services/supabase';
 import Layout from '../components/Layout';
@@ -447,6 +447,11 @@ const DashboardPage = () => {
         
         <div className="dashboard-page">
           <h1>Prossime Partite</h1>
+          
+          <div className="dashboard-news-message">
+            <strong>Novità!</strong> Abbiamo introdotto le <Link to="/leghe">Leghe Private</Link>! 
+            Creane subito una per sfidare i tuoi amici!!
+          </div>
           
           {/* Mostra il countdown solo se il tempo non è scaduto */}
           {turnoAttuale && !isPronosticoScaduto() && (
