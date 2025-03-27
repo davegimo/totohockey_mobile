@@ -202,8 +202,8 @@ const InvitoModal: React.FC<InvitoModalProps> = ({
   const handleCondividiWhatsApp = () => {
     const oraScadenza = formattaOraScadenza();
     const testoMessaggio = encodeURIComponent(
-      `Entra a far parte della lega ${nomeLega} su Totohockey! \n` +
-      `Usa questo link per accedere, è valido fino alle ${oraScadenza || 'prossime 12 ore'} \n\n` +
+      `Entra a far parte della lega *${nomeLega}* su Totohockey!🤩\n\n` +
+      `Usa questo link per accedere, è valido fino alle ${oraScadenza || 'prossime 12 ore'}⏰\n\n👇🏻👇🏻\n` +
       `${linkInvito}`
     );
     
