@@ -3,9 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { 
   partecipaLegaConCodice, 
-  getLegaByInviteCode, 
-  verificaEsistenzaCodiceInvito, 
-  verificaCodiciInvito 
+  getLegaByInviteCode
 } from '../services/supabase';
 import '../styles/PartecipaPagina.css';
 
@@ -83,42 +81,6 @@ const PartecipaPagina: React.FC = () => {
       setError('Si è verificato un errore durante la ricerca della lega');
     } finally {
       console.log('[cercaLega] Ricerca completata, fine stato di caricamento');
-      setCercaLegaInCorso(false);
-    }
-  };
-
-  const verificaDiagnostica = async () => {
-    if (!codiceInvito) {
-      setError('Inserisci un codice di invito per la verifica diagnostica');
-      return;
-    }
-
-    console.log('[verificaDiagnostica] Avvio verifica per codice:', codiceInvito);
-    setCercaLegaInCorso(true);
-    
-    try {
-      // Verifica manualmente tutte le leghe
-      const { leghe } = await verificaCodiciInvito();
-      console.log('[verificaDiagnostica] Elenco leghe disponibili:', leghe);
-      
-      // Verifica con funzione specializzata
-      const { match, debug, error } = await verificaEsistenzaCodiceInvito(codiceInvito);
-      console.log('[verificaDiagnostica] Risultato verifica codice:', { match, debug, error });
-      
-      if (match.eq || match.ilike || match.manuale) {
-        setError(`Diagnostica: lega trovata ma non accessibile. 
-          Match esatto: ${match.eq ? 'Sì' : 'No'}, 
-          Match case-insensitive: ${match.ilike ? 'Sì' : 'No'}, 
-          Match manuale: ${match.manuale ? 'Sì' : 'No'}
-          ${debug ? 'Dettagli errore: ' + JSON.stringify(debug) : ''}`);
-      } else {
-        setError(`Diagnostica: nessuna lega trovata con codice ${codiceInvito}. Verifica codice o contatta l'amministratore.
-          ${debug ? 'Dettagli errore: ' + JSON.stringify(debug) : ''}`);
-      }
-    } catch (err) {
-      console.error('[verificaDiagnostica] Errore:', err);
-      setError('Errore durante la verifica diagnostica');
-    } finally {
       setCercaLegaInCorso(false);
     }
   };
@@ -236,19 +198,6 @@ const PartecipaPagina: React.FC = () => {
                     {cercaLegaInCorso ? 'Ricerca...' : 'Cerca'}
                   </button>
                 </div>
-              </div>
-
-              {/* Aggiungiamo un pulsante per la diagnostica */}
-              <div className="partecipa-diagnostic">
-                <button 
-                  type="button"
-                  className="partecipa-diagnostic-button"
-                  onClick={verificaDiagnostica}
-                  disabled={cercaLegaInCorso || !codiceInvito}
-                >
-                  Verifica diagnostica
-                </button>
-                <small>Se riscontri problemi, usa questo pulsante per verificare il codice.</small>
               </div>
             </form>
             
