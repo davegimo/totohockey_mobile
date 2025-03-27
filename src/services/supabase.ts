@@ -1362,4 +1362,33 @@ export const verificaEsistenzaCodiceInvito = async (codice: string) => {
   }
 };
 
+export const ricalcolaPunteggiLega = async (legaId: string) => {
+  try {
+    console.log('Avvio ricalcolo punteggi per la lega:', legaId);
+    
+    // Verifica che l'utente sia admin della lega
+    const { isAdmin: isAdminCheck, error: adminError } = await isLegaAdmin(legaId);
+    if (!isAdminCheck || adminError) {
+      console.error('Solo gli admin possono ricalcolare i punteggi della lega');
+      return { success: false, error: 'Permessi insufficienti' };
+    }
+    
+    // Chiama la funzione RPC del database per ricalcolare i punteggi
+    const { data, error } = await supabase.rpc('ricalcola_punteggi_lega', {
+      p_lega_id: legaId
+    });
+    
+    if (error) {
+      console.error('Errore durante il ricalcolo dei punteggi:', error);
+      return { success: false, error };
+    }
+    
+    console.log('Ricalcolo punteggi completato con successo');
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('Errore durante il ricalcolo dei punteggi:', error);
+    return { success: false, error };
+  }
+};
+
 export default supabase;

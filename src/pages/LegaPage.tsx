@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import supabase from '../services/supabase';
 import Layout from '../components/Layout';
-import { ClassificaLega, Lega, getClassificaLega, isLegaAdmin, rigeneraLinkInvito } from '../services/supabase';
+import { ClassificaLega, Lega, getClassificaLega, isLegaAdmin, rigeneraLinkInvito, ricalcolaPunteggiLega } from '../services/supabase';
 import InvitoModal from '../components/InvitoModal';
 import '../styles/LegaPage.css';
 
@@ -114,44 +114,21 @@ const LegaPage = () => {
   const handleRicalcolaClassifica = async () => {
     if (!id || !isAdmin) return;
     
+    const legaId = id.toString();
+    
     try {
       setLoadingRicalcolo(true);
       setSuccessMessage(null);
       
-      // Qui si potrebbe implementare una funzione specifica per ricalcolare solo la classifica della lega
-      // Per ora, utilizziamo un approccio semplificato simulando il ricalcolo
+      // Chiama la funzione per ricalcolare i punteggi della lega
+      const { success, error } = await ricalcolaPunteggiLega(legaId);
       
-      // 1. Ricalcola i punteggi per i membri della lega
-      const { data: pronosticiUtenti, error: pronosticiError } = await supabase
-        .from('pronostici')
-        .select('partita_id, punti, user_id')
-        .in('user_id', classifica.map(item => item.giocatore_id));
-      
-      if (pronosticiError) {
-        throw pronosticiError;
+      if (!success || error) {
+        throw new Error(error || 'Errore durante il ricalcolo della classifica');
       }
       
-      // 2. Aggiorna la tabella giocatori_leghe con i nuovi punteggi
-      for (const giocatore of classifica) {
-        const pronosticiGiocatore = pronosticiUtenti?.filter(p => p.user_id === giocatore.giocatore_id) || [];
-        const puntiTotali = pronosticiGiocatore.reduce((sum, p) => sum + (p.punti || 0), 0);
-        const risultatiEsatti = pronosticiGiocatore.filter(p => p.punti === 3).length;
-        const esitiPresi = pronosticiGiocatore.filter(p => p.punti === 1).length;
-        
-        await supabase
-          .from('giocatori_leghe')
-          .update({
-            punti_totali: puntiTotali,
-            risultati_esatti: risultatiEsatti,
-            esiti_presi: esitiPresi,
-            ultima_modifica: new Date().toISOString()
-          })
-          .eq('giocatore_id', giocatore.giocatore_id)
-          .eq('lega_id', id);
-      }
-      
-      // 3. Ricarica la classifica aggiornata
-      const { classifica: nuovaClassifica, error: nuovaClassificaError } = await getClassificaLega(id);
+      // Ricarica la classifica aggiornata
+      const { classifica: nuovaClassifica, error: nuovaClassificaError } = await getClassificaLega(legaId);
       
       if (nuovaClassificaError) {
         throw nuovaClassificaError;
