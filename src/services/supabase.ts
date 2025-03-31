@@ -127,6 +127,13 @@ export type ClassificaLega = {
   posizione: number;
 };
 
+export type TopPerformer = {
+  nome_giocatore: string;
+  cognome_giocatore: string;
+  turno: string;
+  punti_totali: number;
+};
+
 // Authentication functions
 export const signUp = async (email: string, password: string, nome: string, cognome: string) => {
   const { data, error } = await supabase.auth.signUp({
@@ -1548,6 +1555,16 @@ export const getPronosticiWithDetailsInLega = async (userId: string, legaId: str
     console.error('Errore durante l\'elaborazione dei pronostici:', error);
     return { turniConPronostici: [], error };
   }
+};
+
+export const getTopPerformers = async () => {
+  const { data, error } = await supabase
+    .from('top_performers')
+    .select('*')
+    .order('turno', { ascending: true })
+    .order('punti_totali', { ascending: false });
+  
+  return { topPerformers: data || [], error };
 };
 
 export default supabase;
