@@ -128,6 +128,7 @@ export type ClassificaLega = {
 };
 
 export type TopPerformer = {
+  id_giocatore: string;
   nome_giocatore: string;
   cognome_giocatore: string;
   turno: string;

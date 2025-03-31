@@ -54,6 +54,32 @@ const GiocatorePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [legaInfo, setLegaInfo] = useState<{ id: string, nome: string } | null>(null);
+  const [recapPunti, setRecapPunti] = useState<{ punti_totali: number; risultati_esatti: number; esiti_presi: number }>({
+    punti_totali: 0,
+    risultati_esatti: 0,
+    esiti_presi: 0
+  });
+
+  // Funzione per calcolare i punti di recap
+  const calcolaRecapPunti = (pronostici: PronosticoConDettagli[]) => {
+    let punti_totali = 0;
+    let risultati_esatti = 0;
+    let esiti_presi = 0;
+
+    pronostici.forEach(pronostico => {
+      if (pronostico.punti === null) return;
+
+      punti_totali += pronostico.punti;
+      
+      if (pronostico.punti === 3) {
+        risultati_esatti++;
+      } else if (pronostico.punti === 1) {
+        esiti_presi++;
+      }
+    });
+
+    return { punti_totali, risultati_esatti, esiti_presi };
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,9 +88,10 @@ const GiocatorePage = () => {
       try {
         setLoading(true);
         
-        // Controlla se c'è un parametro lega_id nella query string
+        // Controlla se c'è un parametro lega_id o turno nella query string
         const params = new URLSearchParams(location.search);
         const legaId = params.get('lega_id');
+        const turnoId = params.get('turno');
         
         let userData: ProfileData | null = null;
         
@@ -116,11 +143,12 @@ const GiocatorePage = () => {
             if (!turniConPronostici || turniConPronostici.length === 0) {
               console.log('Nessun pronostico trovato per questa lega');
               setTurniConPronostici([]);
+              setRecapPunti({ punti_totali: 0, risultati_esatti: 0, esiti_presi: 0 });
             } else {
               console.log('Pronostici recuperati per la lega:', turniConPronostici);
               
               // Filtra i pronostici per mostrare solo quelli con risultati definitivi
-              const turniConPronosticiFiltrati = turniConPronostici.map(turno => {
+              let turniConPronosticiFiltrati = turniConPronostici.map(turno => {
                 return {
                   ...turno,
                   pronostici: turno.pronostici.filter(pronostico => 
@@ -131,7 +159,19 @@ const GiocatorePage = () => {
                 };
               }).filter(turno => turno.pronostici.length > 0);
               
+              // Se è specificato un turno, filtra solo i pronostici di quel turno
+              if (turnoId) {
+                turniConPronosticiFiltrati = turniConPronosticiFiltrati.filter(
+                  turno => turno.turno.id === turnoId
+                );
+              }
+              
               setTurniConPronostici(turniConPronosticiFiltrati);
+
+              // Calcola i punti di recap
+              const tuttiPronostici = turniConPronosticiFiltrati.flatMap(turno => turno.pronostici);
+              const recap = calcolaRecapPunti(tuttiPronostici);
+              setRecapPunti(recap);
             }
           } catch (err: any) {
             console.error('Errore durante il recupero dei pronostici della lega:', err);
@@ -152,7 +192,7 @@ const GiocatorePage = () => {
           userData = generalUser;
           
           try {
-            // Recupera tutti i pronostici dell'utente (comportamento originale)
+            // Recupera tutti i pronostici dell'utente
             const { turniConPronostici, error: pronosticiError } = await getPronosticiWithDetails(id);
             
             if (pronosticiError) {
@@ -163,11 +203,12 @@ const GiocatorePage = () => {
             if (!turniConPronostici || turniConPronostici.length === 0) {
               console.log('Nessun pronostico trovato');
               setTurniConPronostici([]);
+              setRecapPunti({ punti_totali: 0, risultati_esatti: 0, esiti_presi: 0 });
             } else {
               console.log('Pronostici recuperati:', turniConPronostici);
               
               // Filtra i pronostici per mostrare solo quelli con risultati definitivi
-              const turniConPronosticiFiltrati = turniConPronostici.map(turno => {
+              let turniConPronosticiFiltrati = turniConPronostici.map(turno => {
                 return {
                   ...turno,
                   pronostici: turno.pronostici.filter(pronostico => 
@@ -177,8 +218,20 @@ const GiocatorePage = () => {
                   )
                 };
               }).filter(turno => turno.pronostici.length > 0);
+
+              // Se è specificato un turno, filtra solo i pronostici di quel turno
+              if (turnoId) {
+                turniConPronosticiFiltrati = turniConPronosticiFiltrati.filter(
+                  turno => turno.turno.id === turnoId
+                );
+              }
               
               setTurniConPronostici(turniConPronosticiFiltrati);
+
+              // Calcola i punti di recap
+              const tuttiPronostici = turniConPronosticiFiltrati.flatMap(turno => turno.pronostici);
+              const recap = calcolaRecapPunti(tuttiPronostici);
+              setRecapPunti(recap);
             }
           } catch (err) {
             console.error('Errore durante il recupero dei pronostici generali:', err);
@@ -243,15 +296,15 @@ const GiocatorePage = () => {
               <div className="giocatore-stats">
                 <div className="giocatore-punteggio">
                   <span className="punteggio-label">Punti:</span>
-                  <span className="punteggio-value">{user?.punteggio}</span>
+                  <span className="punteggio-value">{recapPunti.punti_totali}</span>
                 </div>
                 <div className="giocatore-risultati">
                   <span className="risultati-label">Risultati:</span>
-                  <span className="risultati-value">{user?.risultati_esatti || 0}</span>
+                  <span className="risultati-value">{recapPunti.risultati_esatti}</span>
                 </div>
                 <div className="giocatore-esiti">
                   <span className="esiti-label">Esiti:</span>
-                  <span className="esiti-value">{user?.esiti_presi || 0}</span>
+                  <span className="esiti-value">{recapPunti.esiti_presi}</span>
                 </div>
               </div>
             </div>

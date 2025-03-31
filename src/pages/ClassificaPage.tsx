@@ -176,7 +176,12 @@ const ClassificaPage = () => {
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                     </td>
                     <td className="giocatore">
-                      {`${performer.nome_giocatore} ${performer.cognome_giocatore}`}
+                      <Link 
+                        to={`/giocatore/${performer.id_giocatore}?turno=${selectedTurno}`}
+                        className="giocatore-link"
+                      >
+                        {`${performer.nome_giocatore} ${performer.cognome_giocatore}`}
+                      </Link>
                     </td>
                     <td className="punteggio">
                       <strong>{performer.punti_totali}</strong>

@@ -210,6 +210,17 @@
   background-color: rgba(0, 0, 0, 0.03);
 }
 
+.top-performers-table .giocatore-link {
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.top-performers-table .giocatore-link:hover {
+  color: #4CAF50;
+}
+
 .turno-selector {
   margin-bottom: var(--spacing-md);
   display: flex;
