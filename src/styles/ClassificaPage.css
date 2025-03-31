@@ -210,6 +210,40 @@
   background-color: rgba(0, 0, 0, 0.03);
 }
 
+.turno-selector {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.turno-selector label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.turno-select {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: white;
+  font-size: 1rem;
+  color: var(--text-color);
+  cursor: pointer;
+  min-width: 200px;
+  transition: border-color 0.2s ease;
+}
+
+.turno-select:hover {
+  border-color: var(--primary-color);
+}
+
+.turno-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(30, 132, 73, 0.1);
+}
+
 @media (max-width: 768px) {
   .classifica-table th,
   .classifica-table td {
@@ -253,6 +287,16 @@
 
   .turno-section h3 {
     font-size: 1.1rem;
+  }
+
+  .turno-selector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-xs);
+  }
+
+  .turno-select {
+    width: 100%;
   }
 }
 

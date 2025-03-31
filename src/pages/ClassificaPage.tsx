@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getClassifica, getTopPerformers, TopPerformer } from '../services/supabase';
+import { getClassifica, getTopPerformers, getTurni, TopPerformer, Turno } from '../services/supabase';
 import { useSession } from '../context/SessionContext';
 import '../styles/ClassificaPage.css';
 
@@ -23,6 +23,8 @@ const ClassificaPage = () => {
   const { session } = useSession();
   const [classifica, setClassifica] = useState<ClassificaItem[]>([]);
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
+  const [turni, setTurni] = useState<Turno[]>([]);
+  const [selectedTurno, setSelectedTurno] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('punti_totali');
@@ -46,6 +48,7 @@ const ClassificaPage = () => {
           setError(topPerformersError.message);
           return;
         }
+        console.log('Top Performers ricevuti:', topPerformersData);
         setTopPerformers(topPerformersData as TopPerformer[]);
       }
     } catch (err: any) {
@@ -56,9 +59,31 @@ const ClassificaPage = () => {
     }
   }, [viewMode]);
 
+  const fetchTurni = async () => {
+    try {
+      const { turni: turniData, error: turniError } = await getTurni();
+      if (turniError) {
+        setError(turniError.message);
+        return;
+      }
+      console.log('Turni ricevuti:', turniData);
+      setTurni(turniData);
+      // Seleziona il turno più recente come default
+      if (turniData.length > 0) {
+        setSelectedTurno(turniData[0].id);
+      }
+    } catch (err: any) {
+      console.error('Errore durante il recupero dei turni:', err);
+      setError(err.message || 'Errore durante il recupero dei turni. Riprova più tardi.');
+    }
+  };
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    if (viewMode === 'top_performers') {
+      fetchTurni();
+    }
+  }, [fetchData, viewMode]);
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -85,45 +110,83 @@ const ClassificaPage = () => {
   });
 
   const renderTopPerformers = () => {
-    const turni = [...new Set(topPerformers.map(tp => tp.turno))];
-    
+    if (!selectedTurno) {
+      return (
+        <div className="no-classifica">
+          <p>Seleziona un turno per visualizzare i top performers.</p>
+        </div>
+      );
+    }
+
+    console.log('Turno selezionato:', selectedTurno);
+    console.log('Top Performers disponibili:', topPerformers);
+
+    const selectedTurnoData = turni.find(t => t.id === selectedTurno);
+    console.log('Dati del turno selezionato:', selectedTurnoData);
+
+    if (!selectedTurnoData) {
+      return (
+        <div className="no-classifica">
+          <p>Turno non trovato.</p>
+        </div>
+      );
+    }
+
+    const performersInTurno = topPerformers
+      .filter(tp => tp.turno === selectedTurnoData.descrizione)
+      .sort((a, b) => b.punti_totali - a.punti_totali);
+
+    console.log('Performers filtrati per turno:', performersInTurno);
+
     return (
       <div className="top-performers-container">
-        {turni.map(turno => {
-          const performersInTurno = topPerformers
-            .filter(tp => tp.turno === turno)
-            .sort((a, b) => b.punti_totali - a.punti_totali);
-          
-          return (
-            <div key={turno} className="turno-section">
-              <h3>{turno}</h3>
-              <table className="top-performers-table">
-                <thead>
-                  <tr>
-                    <th>Pos.</th>
-                    <th>Giocatore</th>
-                    <th>Punti</th>
+        <div className="turno-selector">
+          <label htmlFor="turno-select">Seleziona Turno:</label>
+          <select 
+            id="turno-select" 
+            value={selectedTurno} 
+            onChange={(e) => setSelectedTurno(e.target.value)}
+            className="turno-select"
+          >
+            {turni.map(turno => (
+              <option key={turno.id} value={turno.id}>
+                {turno.descrizione}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="turno-section">
+          <h3>{selectedTurnoData.descrizione}</h3>
+          {performersInTurno.length === 0 ? (
+            <p>Nessun giocatore ha ancora punti in questo turno.</p>
+          ) : (
+            <table className="top-performers-table">
+              <thead>
+                <tr>
+                  <th>Pos.</th>
+                  <th>Giocatore</th>
+                  <th>Punti</th>
+                </tr>
+              </thead>
+              <tbody>
+                {performersInTurno.map((performer, index) => (
+                  <tr key={`${performer.nome_giocatore}-${performer.cognome_giocatore}`}>
+                    <td className="posizione">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    </td>
+                    <td className="giocatore">
+                      {`${performer.nome_giocatore} ${performer.cognome_giocatore}`}
+                    </td>
+                    <td className="punteggio">
+                      <strong>{performer.punti_totali}</strong>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {performersInTurno.map((performer, index) => (
-                    <tr key={`${performer.nome_giocatore}-${performer.cognome_giocatore}-${turno}`}>
-                      <td className="posizione">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
-                      </td>
-                      <td className="giocatore">
-                        {`${performer.nome_giocatore} ${performer.cognome_giocatore}`}
-                      </td>
-                      <td className="punteggio">
-                        <strong>{performer.punti_totali}</strong>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        })}
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     );
   };
@@ -233,13 +296,7 @@ const ClassificaPage = () => {
             </div>
           )
         ) : (
-          topPerformers.length === 0 ? (
-            <div className="no-classifica">
-              <p>Non ci sono ancora dati disponibili per i top performers.</p>
-            </div>
-          ) : (
-            renderTopPerformers()
-          )
+          renderTopPerformers()
         )}
       </div>
     </Layout>

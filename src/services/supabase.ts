@@ -1561,8 +1561,14 @@ export const getTopPerformers = async () => {
   const { data, error } = await supabase
     .from('top_performers')
     .select('*')
-    .order('turno', { ascending: true })
+    .order('turno', { ascending: false })
     .order('punti_totali', { ascending: false });
+  
+  if (error) {
+    console.error('Errore nel recupero dei top performers:', error);
+  } else {
+    console.log('Top performers recuperati dal database:', data);
+  }
   
   return { topPerformers: data || [], error };
 };
