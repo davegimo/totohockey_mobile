@@ -210,6 +210,10 @@
   margin-top: 12px;
 }
 
+.pronostico-non-inserito {
+  color: #ffa000;
+}
+
 .match-pronostico-dashboard {
   display: flex;
   margin-top: 16px;
@@ -402,6 +406,19 @@
   .match-pronostico-input-dashboard {
     width: 35px;
     height: 30px;
+  }
+  
+  /* Riduco la dimensione del testo per "Pronostico non inserito" su schermi piccoli */
+  .match-waiting-dashboard {
+    font-size: 12px;
+  }
+  
+  .pronostico-non-inserito {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    background-color: rgba(255, 160, 0, 0.1);
+    border-radius: 4px;
   }
 }
 

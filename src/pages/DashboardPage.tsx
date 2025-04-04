@@ -596,7 +596,7 @@ const DashboardPage = () => {
                                 </div>
                               </div>
                             ) : (
-                              <div className="match-waiting-dashboard">Pronostico non inserito</div>
+                              <div className="match-waiting-dashboard pronostico-non-inserito">Pronostico non inserito</div>
                             )}
                           </>
                         )}
