@@ -41,14 +41,21 @@ const PronosticoModal = ({
 }) => {
   const [pronosticoCasa, setPronosticoCasa] = useState(pronosticoAttuale?.casa || '');
   const [pronosticoOspite, setPronosticoOspite] = useState(pronosticoAttuale?.ospite || '');
+  const [initialLoad, setInitialLoad] = useState(true);
   
   useEffect(() => {
-    // Aggiorna i valori quando si apre il modal con un pronostico esistente
-    if (isOpen && pronosticoAttuale) {
+    // Aggiorna i valori solo la prima volta che si apre il modal
+    if (isOpen && pronosticoAttuale && initialLoad) {
       setPronosticoCasa(pronosticoAttuale.casa);
       setPronosticoOspite(pronosticoAttuale.ospite);
+      setInitialLoad(false);
     }
-  }, [isOpen, pronosticoAttuale]);
+    
+    // Resetta lo stato quando si chiude il modal
+    if (!isOpen) {
+      setInitialLoad(true);
+    }
+  }, [isOpen, pronosticoAttuale, initialLoad]);
   
   if (!isOpen) return null;
   
