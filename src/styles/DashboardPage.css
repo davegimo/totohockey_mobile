@@ -556,3 +556,215 @@
     margin-bottom: 1.5rem;
   }
 }
+
+/* Stili per il modal del pronostico */
+.pronostico-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.pronostico-modal {
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.pronostico-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #8A8F98;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.pronostico-modal-close:hover {
+  background-color: #f3f5f9;
+  color: var(--primary-color);
+}
+
+.pronostico-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.pronostico-modal-content {
+  margin-bottom: 20px;
+}
+
+.pronostico-modal-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.pronostico-modal-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+}
+
+.pronostico-modal-team-logo {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pronostico-modal-team-logo img {
+  max-width: 70px;
+  max-height: 70px;
+}
+
+.pronostico-modal-team-name {
+  font-weight: 600;
+  font-size: 16px;
+  text-align: center;
+  color: var(--text-color);
+}
+
+.pronostico-modal-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pronostico-modal-input {
+  width: 60px;
+  height: 50px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.pronostico-modal-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.pronostico-modal-score-separator {
+  font-size: 24px;
+  font-weight: 700;
+  color: #dbdade;
+}
+
+.pronostico-modal-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.pronostico-modal-save {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.pronostico-modal-save:hover {
+  background-color: #1a7f4b;
+}
+
+.pronostico-modal-save:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Media queries per dispositivi mobili */
+@media (max-width: 768px) {
+  .pronostico-modal {
+    padding: 15px;
+    max-width: calc(100% - 30px);
+  }
+  
+  .pronostico-modal-title {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+  
+  .pronostico-modal-team-logo {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .pronostico-modal-team-logo img {
+    max-width: 50px;
+    max-height: 50px;
+  }
+  
+  .pronostico-modal-team-name {
+    font-size: 14px;
+  }
+  
+  .pronostico-modal-input {
+    width: 50px;
+    height: 40px;
+    font-size: 18px;
+  }
+  
+  .pronostico-modal-save {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pronostico-modal-team-logo {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .pronostico-modal-team-logo img {
+    max-width: 40px;
+    max-height: 40px;
+  }
+  
+  .pronostico-modal-team-name {
+    font-size: 12px;
+  }
+  
+  .pronostico-modal-input {
+    width: 40px;
+    height: 35px;
+    font-size: 16px;
+  }
+}

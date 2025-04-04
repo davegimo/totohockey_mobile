@@ -23,16 +23,138 @@ const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 
   );
 };
 
+// Componente Modal per l'inserimento dei pronostici
+const PronosticoModal = ({ 
+  isOpen, 
+  onClose, 
+  partita, 
+  pronosticoAttuale, 
+  onSave, 
+  salvando 
+}: { 
+  isOpen: boolean, 
+  onClose: () => void, 
+  partita: PartitaWithPronostico, 
+  pronosticoAttuale: { casa: string, ospite: string } | null,
+  onSave: (pronosticoCasa: number, pronosticoOspite: number) => void,
+  salvando: boolean
+}) => {
+  const [pronosticoCasa, setPronosticoCasa] = useState(pronosticoAttuale?.casa || '');
+  const [pronosticoOspite, setPronosticoOspite] = useState(pronosticoAttuale?.ospite || '');
+  
+  useEffect(() => {
+    // Aggiorna i valori quando si apre il modal con un pronostico esistente
+    if (isOpen && pronosticoAttuale) {
+      setPronosticoCasa(pronosticoAttuale.casa);
+      setPronosticoOspite(pronosticoAttuale.ospite);
+    }
+  }, [isOpen, pronosticoAttuale]);
+  
+  if (!isOpen) return null;
+  
+  const handleSave = () => {
+    const casaNum = parseInt(pronosticoCasa, 10);
+    const ospiteNum = parseInt(pronosticoOspite, 10);
+    
+    if (isNaN(casaNum) || isNaN(ospiteNum)) {
+      return; // Non salvare se i valori non sono numerici
+    }
+    
+    onSave(casaNum, ospiteNum);
+  };
+  
+  const handleChange = (value: string, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    // Verifichiamo che il valore contenga solo cifre o sia vuoto
+    if (value !== '' && !/^\d+$/.test(value)) {
+      return; // Ignoriamo input non numerici
+    }
+    setter(value);
+  };
+  
+  return (
+    <div className="pronostico-modal-overlay">
+      <div className="pronostico-modal">
+        <button className="pronostico-modal-close" onClick={onClose}>×</button>
+        
+        <h3 className="pronostico-modal-title">
+          {partita.pronostico ? 'Aggiorna Pronostico' : 'Inserisci Pronostico'}
+        </h3>
+        
+        <div className="pronostico-modal-content">
+          <div className="pronostico-modal-teams">
+            <div className="pronostico-modal-team">
+              <div className="pronostico-modal-team-logo">
+                {partita.squadra_casa?.logo_url && (
+                  <img 
+                    src={partita.squadra_casa.logo_url} 
+                    alt={`Logo ${partita.squadra_casa.nome}`}
+                  />
+                )}
+              </div>
+              <div className="pronostico-modal-team-name">
+                {partita.squadra_casa?.nome || 'Squadra casa'}
+              </div>
+            </div>
+            
+            <div className="pronostico-modal-score">
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={pronosticoCasa}
+                onChange={(e) => handleChange(e.target.value, setPronosticoCasa)}
+                className="pronostico-modal-input"
+              />
+              <span className="pronostico-modal-score-separator">:</span>
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={pronosticoOspite}
+                onChange={(e) => handleChange(e.target.value, setPronosticoOspite)}
+                className="pronostico-modal-input"
+              />
+            </div>
+            
+            <div className="pronostico-modal-team">
+              <div className="pronostico-modal-team-logo">
+                {partita.squadra_ospite?.logo_url && (
+                  <img 
+                    src={partita.squadra_ospite.logo_url} 
+                    alt={`Logo ${partita.squadra_ospite.nome}`}
+                  />
+                )}
+              </div>
+              <div className="pronostico-modal-team-name">
+                {partita.squadra_ospite?.nome || 'Squadra ospite'}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="pronostico-modal-actions">
+          <button 
+            onClick={handleSave} 
+            className="pronostico-modal-save"
+            disabled={salvando || pronosticoCasa === '' || pronosticoOspite === ''}
+          >
+            {salvando ? 'Salvando...' : 'Salva Pronostico'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DashboardPage = () => {
   const [user, setUser] = useState<User | null>(null);
   const [partite, setPartite] = useState<PartitaWithPronostico[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pronostici, setPronostici] = useState<Record<string, { casa: number, ospite: number }>>({});
-  const [inputValues, setInputValues] = useState<Record<string, { casa: string, ospite: string }>>({});
   const [salvandoPartite, setSalvandoPartite] = useState<Record<string, boolean>>({});
   const [turnoAttuale, setTurnoAttuale] = useState<Turno | null>(null);
   const [countdown, setCountdown] = useState<string>('');
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', id: number } | null>(null);
+  const [modalPartita, setModalPartita] = useState<PartitaWithPronostico | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -145,26 +267,6 @@ const DashboardPage = () => {
         });
         
         setPartite(partiteConPronostici);
-        
-        // Inizializza lo stato dei pronostici
-        const pronosticiIniziali: Record<string, { casa: number, ospite: number }> = {};
-        // Inizializza anche i valori di input
-        const inputValuesIniziali: Record<string, { casa: string, ospite: string }> = {};
-        
-        pronosticiData.forEach((p: Pronostico) => {
-          pronosticiIniziali[p.partita_id] = {
-            casa: p.pronostico_casa,
-            ospite: p.pronostico_ospite
-          };
-          
-          inputValuesIniziali[p.partita_id] = {
-            casa: p.pronostico_casa.toString(),
-            ospite: p.pronostico_ospite.toString()
-          };
-        });
-        
-        setPronostici(pronosticiIniziali);
-        setInputValues(inputValuesIniziali);
       } catch (err: any) {
         console.error('Errore nel caricamento delle partite:', err.message || 'Errore nel caricamento delle partite');
       } finally {
@@ -224,43 +326,22 @@ const DashboardPage = () => {
     return dataLimite <= now;
   };
 
-  const handlePronosticoChange = (partitaId: string, tipo: 'casa' | 'ospite', valore: string) => {
-    // Verifichiamo che il valore contenga solo cifre o sia vuoto
-    if (valore !== '' && !/^\d+$/.test(valore)) {
-      return; // Ignoriamo input non numerici
-    }
-    
-    // Aggiorniamo i valori di input
-    setInputValues(prev => ({
-      ...prev,
-      [partitaId]: {
-        ...prev[partitaId] || { casa: '', ospite: '' },
-        [tipo]: valore
-      }
-    }));
-    
-    // Se il valore è una stringa vuota, non aggiorniamo i pronostici
-    if (valore === '') return;
-    
-    // Convertiamo il valore in numero
-    const valoreNumerico = parseInt(valore, 10);
-    
-    // Aggiorniamo i pronostici
-    setPronostici(prev => ({
-      ...prev,
-      [partitaId]: {
-        ...prev[partitaId] || { casa: '', ospite: '' },
-        [tipo]: valoreNumerico.toString()
-      }
-    }));
-  };
-
   // Funzione per mostrare un toast con ID univoco
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type, id: Date.now() });
   };
 
-  const salvaPronostico = async (partitaId: string) => {
+  // Funzione per aprire il modal di pronostico
+  const openPronosticoModal = (partita: PartitaWithPronostico) => {
+    setModalPartita(partita);
+  };
+
+  // Funzione per chiudere il modal di pronostico
+  const closePronosticoModal = () => {
+    setModalPartita(null);
+  };
+
+  const salvaPronostico = async (partitaId: string, pronosticoCasa: number, pronosticoOspite: number) => {
     if (!user) {
       showToast('Devi essere loggato per salvare un pronostico', 'error');
       return;
@@ -273,43 +354,12 @@ const DashboardPage = () => {
     }));
     
     try {
-      // Otteniamo il pronostico per questa partita
-      const pronostico = pronostici[partitaId] || inputValues[partitaId];
-      
-      // Verifichiamo che entrambi i valori siano stati inseriti
-      if (!pronostico || 
-          (typeof pronostico.casa === 'string' && pronostico.casa === '') || 
-          (typeof pronostico.ospite === 'string' && pronostico.ospite === '') ||
-          pronostico.casa === undefined ||
-          pronostico.ospite === undefined) {
-        showToast('Inserisci un valore per entrambe le squadre', 'error');
-        setSalvandoPartite(prev => ({
-          ...prev,
-          [partitaId]: false
-        }));
-        return;
-      }
-      
-      // Convertiamo i valori in numeri
-      const casaNum = parseInt(pronostico.casa.toString(), 10);
-      const ospiteNum = parseInt(pronostico.ospite.toString(), 10);
-      
-      // Verifichiamo che i valori siano numeri validi
-      if (isNaN(casaNum) || isNaN(ospiteNum)) {
-        showToast('I valori devono essere numeri validi', 'error');
-        setSalvandoPartite(prev => ({
-          ...prev,
-          [partitaId]: false
-        }));
-        return;
-      }
-      
       // Salviamo il pronostico
       const { error } = await savePronostico({
         user_id: user.id,
         partita_id: partitaId,
-        pronostico_casa: casaNum,
-        pronostico_ospite: ospiteNum
+        pronostico_casa: pronosticoCasa,
+        pronostico_ospite: pronosticoOspite
       });
       
       if (error) {
@@ -325,8 +375,8 @@ const DashboardPage = () => {
               id: 'temp-id', // ID temporaneo, verrà aggiornato al prossimo caricamento
               user_id: user.id,
               partita_id: partitaId,
-              pronostico_casa: casaNum,
-              pronostico_ospite: ospiteNum
+              pronostico_casa: pronosticoCasa,
+              pronostico_ospite: pronosticoOspite
             }
           };
         }
@@ -335,12 +385,8 @@ const DashboardPage = () => {
       
       showToast('Pronostico salvato con successo', 'success');
       
-      // Resettiamo i valori di input per questa partita
-      setInputValues(prev => {
-        const newInputs = { ...prev };
-        delete newInputs[partitaId];
-        return newInputs;
-      });
+      // Chiudiamo il modal
+      closePronosticoModal();
       
     } catch (error) {
       console.error('Errore durante il salvataggio del pronostico:', error);
@@ -539,68 +585,29 @@ const DashboardPage = () => {
                         ) : isPronosticoScaduto() ? (
                           <div className="match-waiting-dashboard">In attesa</div>
                         ) : (
-                          <div className="match-pronostico-dashboard">
-                            <input
-                              type="number"
-                              min="0"
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                              value={inputValues[partita.id]?.casa ?? (partita.pronostico?.pronostico_casa ?? '')}
-                              onChange={(e) => handlePronosticoChange(partita.id, 'casa', e.target.value)}
-                              onFocus={(e) => {
-                                if (e.target.value === '0') {
-                                  e.target.select();
-                                }
-                              }}
-                              className="match-pronostico-input-dashboard"
-                              disabled={partita.risultato_casa !== null && partita.risultato_ospite !== null || isPronosticoScaduto()}
-                            />
-                            <span className="match-pronostico-separator-dashboard">:</span>
-                            <input
-                              type="number"
-                              min="0"
-                              pattern="[0-9]*"
-                              inputMode="numeric"
-                              value={inputValues[partita.id]?.ospite ?? (partita.pronostico?.pronostico_ospite ?? '')}
-                              onChange={(e) => handlePronosticoChange(partita.id, 'ospite', e.target.value)}
-                              onFocus={(e) => {
-                                if (e.target.value === '0') {
-                                  e.target.select();
-                                }
-                              }}
-                              className="match-pronostico-input-dashboard"
-                              disabled={partita.risultato_casa !== null && partita.risultato_ospite !== null || isPronosticoScaduto()}
-                            />
-                          </div>
-                        )}
-                        
-                        {/* Mostra il pronostico salvato se disponibile e se la partita è scaduta o ha un risultato */}
-                        {(partita.pronostico && (isPronosticoScaduto() || (partita.risultato_casa !== null && partita.risultato_ospite !== null))) && (
-                          <div className="match-pronostico-saved-dashboard">
-                            <div className="match-pronostico-saved-label-dashboard">Il tuo pronostico</div>
-                            <div className="match-pronostico-saved-value-dashboard">
-                              <span>{partita.pronostico.pronostico_casa}</span>
-                              <span className="match-pronostico-saved-separator-dashboard">:</span>
-                              <span>{partita.pronostico.pronostico_ospite}</span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Mostra "Pronostico non inserito" se il tempo è scaduto e non c'è un pronostico */}
-                        {!partita.pronostico && isPronosticoScaduto() && (
-                          <div className="match-pronostico-saved-dashboard">
-                            <div className="match-pronostico-saved-label-dashboard non-inserito">Nessun pronostico</div>
-                          </div>
+                          <>
+                            {/* Se c'è un pronostico, mostralo in modalità non editabile */}
+                            {partita.pronostico ? (
+                              <div className="match-pronostico-saved-dashboard">
+                                <div className="match-pronostico-saved-value-dashboard">
+                                  <span>{partita.pronostico.pronostico_casa}</span>
+                                  <span className="match-pronostico-saved-separator-dashboard">:</span>
+                                  <span>{partita.pronostico.pronostico_ospite}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="match-waiting-dashboard">Pronostico non inserito</div>
+                            )}
+                          </>
                         )}
                         
                         {/* Mostra il bottone solo se non c'è un risultato e il tempo non è scaduto */}
                         {(partita.risultato_casa === null && partita.risultato_ospite === null) && !isPronosticoScaduto() && (
                           <button 
-                            onClick={() => salvaPronostico(partita.id)} 
+                            onClick={() => openPronosticoModal(partita)} 
                             className="match-bet-place-dashboard"
-                            disabled={salvandoPartite[partita.id]}
                           >
-                            {salvandoPartite[partita.id] ? 'Salvando...' : partita.pronostico ? 'Aggiorna pronostico' : 'Inserisci pronostico'}
+                            {partita.pronostico ? 'Aggiorna pronostico' : 'Inserisci pronostico'}
                           </button>
                         )}
                       </div>
@@ -622,6 +629,23 @@ const DashboardPage = () => {
                 </div>
               ))}
             </div>
+          )}
+          
+          {/* Modal per l'inserimento/aggiornamento del pronostico */}
+          {modalPartita && (
+            <PronosticoModal
+              isOpen={!!modalPartita}
+              onClose={closePronosticoModal}
+              partita={modalPartita}
+              pronosticoAttuale={modalPartita.pronostico ? {
+                casa: modalPartita.pronostico.pronostico_casa.toString(),
+                ospite: modalPartita.pronostico.pronostico_ospite.toString()
+              } : null}
+              onSave={(pronosticoCasa, pronosticoOspite) => 
+                salvaPronostico(modalPartita.id, pronosticoCasa, pronosticoOspite)
+              }
+              salvando={salvandoPartite[modalPartita.id] || false}
+            />
           )}
         </div>
       </div>
