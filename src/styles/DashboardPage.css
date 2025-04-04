@@ -212,6 +212,10 @@
 
 .pronostico-non-inserito {
   color: #ffa000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .match-pronostico-dashboard {
@@ -414,11 +418,27 @@
   }
   
   .pronostico-non-inserito {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 600;
-    padding: 2px 5px;
+    padding: 1px 3px;
     background-color: rgba(255, 160, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 3px;
+    white-space: nowrap;
+    letter-spacing: -0.3px;
+    max-width: 100%;
+  }
+}
+
+/* Aggiunto per iPhone 12 Pro e dispositivi simili */
+@media (max-width: 390px) {
+  .pronostico-non-inserito {
+    font-size: 8px;
+    padding: 1px 2px;
+    letter-spacing: -0.5px;
+  }
+  
+  .match-details-dashboard {
+    max-width: 100%;
   }
 }
 
