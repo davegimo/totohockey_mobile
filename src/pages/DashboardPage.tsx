@@ -162,6 +162,11 @@ const DashboardPage = () => {
   const [countdown, setCountdown] = useState<string>('');
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error', id: number } | null>(null);
   const [modalPartita, setModalPartita] = useState<PartitaWithPronostico | null>(null);
+  const [recapPunti, setRecapPunti] = useState<{ punti_totali: number; risultati_esatti: number; esiti_presi: number }>({
+    punti_totali: 0,
+    risultati_esatti: 0,
+    esiti_presi: 0
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -274,6 +279,10 @@ const DashboardPage = () => {
         });
         
         setPartite(partiteConPronostici);
+        
+        // Calcola il recap dei punti
+        const recap = calcolaRecapPunti(partiteConPronostici);
+        setRecapPunti(recap);
       } catch (err: any) {
         console.error('Errore nel caricamento delle partite:', err.message || 'Errore nel caricamento delle partite');
       } finally {
@@ -331,6 +340,20 @@ const DashboardPage = () => {
     const dataLimite = convertToCET(turnoAttuale.data_limite);
     
     return dataLimite <= now;
+  };
+
+  // Funzione per condividere i risultati su WhatsApp
+  const condividiSuWhatsApp = () => {
+    if (!turnoAttuale) return;
+    
+    const nomeTurno = turnoAttuale.descrizione || 'turno corrente';
+    const messaggio = `Ecco il mio score per il *${nomeTurno}*:\n\nPunteggio: ${recapPunti.punti_totali}\nRisultati esatti: ${recapPunti.risultati_esatti}\nEsiti Presi: ${recapPunti.esiti_presi}\n\nGioca anche tu su totohockey.it!`;
+    
+    // Codifica il messaggio per l'URL
+    const messaggioCodificato = encodeURIComponent(messaggio);
+    
+    // Apri WhatsApp con il messaggio
+    window.open(`https://wa.me/?text=${messaggioCodificato}`, '_blank');
   };
 
   // Funzione per mostrare un toast con ID univoco
@@ -478,6 +501,32 @@ const DashboardPage = () => {
     return 'wrong';
   };
 
+  // Funzione per calcolare i punti di recap
+  const calcolaRecapPunti = (partite: PartitaWithPronostico[]) => {
+    let punti_totali = 0;
+    let risultati_esatti = 0;
+    let esiti_presi = 0;
+
+    partite.forEach(partita => {
+      // Verifica se la partita ha un risultato e un pronostico
+      if (partita.risultato_casa === null || partita.risultato_ospite === null || !partita.pronostico) {
+        return;
+      }
+      
+      const risultato = getPronosticoResult(partita);
+      
+      if (risultato === 'exact') {
+        punti_totali += 3;
+        risultati_esatti++;
+      } else if (risultato === 'correct') {
+        punti_totali += 1;
+        esiti_presi++;
+      }
+    });
+
+    return { punti_totali, risultati_esatti, esiti_presi };
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -513,6 +562,37 @@ const DashboardPage = () => {
                 Hai tempo fino a {formatDataLimite(turnoAttuale.data_limite)} per inserire i tuoi pronostici!
               </p>
               <div className="countdown-timer">{countdown}</div>
+            </div>
+          )}
+          
+          {/* Mostra il recap dei punti quando il tempo è scaduto */}
+          {turnoAttuale && isPronosticoScaduto() && (
+            <div className="dashboard-recap">
+              <h2>Riepilogo Punti</h2>
+              <div className="dashboard-stats">
+                <div className="dashboard-punteggio">
+                  <span className="punteggio-label">Punti:</span>
+                  <span className="punteggio-value">{recapPunti.punti_totali}</span>
+                </div>
+                <div className="dashboard-risultati">
+                  <span className="risultati-label">Risultati:</span>
+                  <span className="risultati-value">{recapPunti.risultati_esatti}</span>
+                </div>
+                <div className="dashboard-esiti">
+                  <span className="esiti-label">Esiti:</span>
+                  <span className="esiti-value">{recapPunti.esiti_presi}</span>
+                </div>
+              </div>
+              <button 
+                className="whatsapp-share-button" 
+                onClick={condividiSuWhatsApp}
+                aria-label="Condividi su WhatsApp"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.289.129.332.202.043.073.043.423-.101.828z"/>
+                </svg>
+                Condividi su WhatsApp
+              </button>
             </div>
           )}
           
