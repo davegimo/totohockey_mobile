@@ -1,0 +1,51 @@
+name: totohockey
+description: "TotoHockey - Pronostici Hockey su Ghiaccio"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # UI
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.14
+  pull_to_refresh: ^2.0.0
+  
+  # Supabase
+  supabase_flutter: ^2.9.3
+  
+  # State Management
+  provider: ^6.1.2
+  
+  # Navigation
+  go_router: ^17.0.0
+  
+  # Utils
+  intl: ^0.20.2
+  shared_preferences: ^2.3.5
+  url_launcher: ^6.3.1
+  share_plus: ^12.0.1
+  
+  # Forms
+  flutter_form_builder: ^10.2.0
+  form_builder_validators: ^11.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
